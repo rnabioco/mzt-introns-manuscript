@@ -1,0 +1,3620 @@
+{
+  "@context": "/terms/",
+  "@graph": [
+    {
+      "@id": "/experiments/ENCSR900XER/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR900XER",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR900XER/",
+            "detail": "Metadata of RNA library {ENCLB055WBG|/libraries/ENCLB055WBG/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR900XER/",
+            "detail": "Experiment {ENCSR900XER|/experiments/ENCSR900XER/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism embryo 4-6 hours post synchronization at egg laying stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-egg laying + 4-6 hour (embryonic)",
+      "files": [
+        {
+          "@id": "/files/ENCFF806NGJ/"
+        },
+        {
+          "@id": "/files/ENCFF604XAU/"
+        },
+        {
+          "@id": "/files/ENCFF287JEK/"
+        },
+        {
+          "@id": "/files/ENCFF837PPR/"
+        },
+        {
+          "@id": "/files/ENCFF578WIL/"
+        },
+        {
+          "@id": "/files/ENCFF759HEF/"
+        },
+        {
+          "@id": "/files/ENCFF269TPE/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "4-6",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS039WNR",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/0aee4adc-62c9-4f49-b5e7-b47f4c6ff2f9/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR960BIV/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR960BIV",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR960BIV/",
+            "detail": "Metadata of RNA library {ENCLB246OPH|/libraries/ENCLB246OPH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR960BIV/",
+            "detail": "Metadata of RNA library {ENCLB259SPG|/libraries/ENCLB259SPG/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR960BIV/",
+            "detail": "Experiment {ENCSR960BIV|/experiments/ENCSR960BIV/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism male adult",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF510KZM/"
+        },
+        {
+          "@id": "/files/ENCFF013HZM/"
+        },
+        {
+          "@id": "/files/ENCFF825EBD/"
+        },
+        {
+          "@id": "/files/ENCFF668XFI/"
+        },
+        {
+          "@id": "/files/ENCFF343XGN/"
+        },
+        {
+          "@id": "/files/ENCFF967NPX/"
+        },
+        {
+          "@id": "/files/ENCFF244BQB/"
+        },
+        {
+          "@id": "/files/ENCFF914XZF/"
+        },
+        {
+          "@id": "/files/ENCFF954HZY/"
+        },
+        {
+          "@id": "/files/ENCFF660RFY/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS184KFG",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/309de4af-4b28-40cd-8975-90fab011341c/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS963ENU",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/b6227d50-672e-48ca-8766-78fb38cabd1f/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR368PVM/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR368PVM",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR368PVM/",
+            "detail": "Metadata of RNA library {ENCLB620MPH|/libraries/ENCLB620MPH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR368PVM/",
+            "detail": "Metadata of RNA library {ENCLB307OFH|/libraries/ENCLB307OFH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR368PVM/",
+            "detail": "Experiment {ENCSR368PVM|/experiments/ENCSR368PVM/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism pupa 2 days post synchronization at white prepupa stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, white prepupa + 2 day (pupa)",
+      "files": [
+        {
+          "@id": "/files/ENCFF430LLK/"
+        },
+        {
+          "@id": "/files/ENCFF371NTQ/"
+        },
+        {
+          "@id": "/files/ENCFF638BSE/"
+        },
+        {
+          "@id": "/files/ENCFF555ZMD/"
+        },
+        {
+          "@id": "/files/ENCFF127MLN/"
+        },
+        {
+          "@id": "/files/ENCFF837RJP/"
+        },
+        {
+          "@id": "/files/ENCFF703MEH/"
+        },
+        {
+          "@id": "/files/ENCFF927YAW/"
+        },
+        {
+          "@id": "/files/ENCFF037SQM/"
+        },
+        {
+          "@id": "/files/ENCFF106AMC/"
+        },
+        {
+          "@id": "/files/ENCFF978SFX/"
+        },
+        {
+          "@id": "/files/ENCFF033MIY/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "2",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS572GPM",
+              "life_stage": "pupa",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/98be1ce4-ee21-4a9e-90b0-303a72d6a9ae/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "2",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS326ZAF",
+              "life_stage": "pupa",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/dc6338ad-dd9b-4952-946a-23e6a91ac32a/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR544AZZ/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR544AZZ",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR544AZZ/",
+            "detail": "Metadata of RNA library {ENCLB853UQA|/libraries/ENCLB853UQA/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR544AZZ/",
+            "detail": "Metadata of RNA library {ENCLB935WYH|/libraries/ENCLB935WYH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR544AZZ/",
+            "detail": "Experiment {ENCSR544AZZ|/experiments/ENCSR544AZZ/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism embryo 12-14 hours post synchronization at egg laying stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-egg laying + 12-14 hour (embryonic)",
+      "files": [
+        {
+          "@id": "/files/ENCFF812QHP/"
+        },
+        {
+          "@id": "/files/ENCFF298RXP/"
+        },
+        {
+          "@id": "/files/ENCFF284ZSP/"
+        },
+        {
+          "@id": "/files/ENCFF035JZS/"
+        },
+        {
+          "@id": "/files/ENCFF479NIU/"
+        },
+        {
+          "@id": "/files/ENCFF357XUC/"
+        },
+        {
+          "@id": "/files/ENCFF354AZP/"
+        },
+        {
+          "@id": "/files/ENCFF976RON/"
+        },
+        {
+          "@id": "/files/ENCFF924SXY/"
+        },
+        {
+          "@id": "/files/ENCFF080EMD/"
+        },
+        {
+          "@id": "/files/ENCFF339QVU/"
+        },
+        {
+          "@id": "/files/ENCFF228LZQ/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "12-14",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS795PSP",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/eaa90c4c-8e21-4511-b589-4277a786c547/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "12-14",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS494TBL",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/3c424851-fd62-47a5-9200-0d7203af9e8b/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR481YVO/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR481YVO",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR481YVO/",
+            "detail": "Metadata of RNA library {ENCLB260UXR|/libraries/ENCLB260UXR/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR481YVO/",
+            "detail": "Experiment {ENCSR481YVO|/experiments/ENCSR481YVO/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism embryo 8-10 hours post synchronization at egg laying stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-egg laying + 8-10 hour (embryonic)",
+      "files": [
+        {
+          "@id": "/files/ENCFF626SSY/"
+        },
+        {
+          "@id": "/files/ENCFF149IVN/"
+        },
+        {
+          "@id": "/files/ENCFF912ELB/"
+        },
+        {
+          "@id": "/files/ENCFF428USS/"
+        },
+        {
+          "@id": "/files/ENCFF511NYR/"
+        },
+        {
+          "@id": "/files/ENCFF684IQR/"
+        },
+        {
+          "@id": "/files/ENCFF762IEM/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "8-10",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS928YML",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/c1c24c2a-0f05-480e-a706-f94494d5df36/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR332HML/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR332HML",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR332HML/",
+            "detail": "Metadata of RNA library {ENCLB686UJM|/libraries/ENCLB686UJM/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR332HML/",
+            "detail": "Experiment {ENCSR332HML|/experiments/ENCSR332HML/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "Sequenced isogenic reference wild type strain whole organism female adult",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF230JKO/"
+        },
+        {
+          "@id": "/files/ENCFF178RPK/"
+        },
+        {
+          "@id": "/files/ENCFF845HWX/"
+        },
+        {
+          "@id": "/files/ENCFF228VNU/"
+        },
+        {
+          "@id": "/files/ENCFF235YSF/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS911GCN",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/4b837755-2284-4c5e-8e84-7fe08e0e4f8d/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR605RDL/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR605RDL",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR605RDL/",
+            "detail": "Metadata of RNA library {ENCLB321OHH|/libraries/ENCLB321OHH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR605RDL/",
+            "detail": "Metadata of RNA library {ENCLB793CMT|/libraries/ENCLB793CMT/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR605RDL/",
+            "detail": "Experiment {ENCSR605RDL|/experiments/ENCSR605RDL/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism male adult 5 days post synchronization at eclosion stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-eclosion + 5 day (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF735KDQ/"
+        },
+        {
+          "@id": "/files/ENCFF545CFS/"
+        },
+        {
+          "@id": "/files/ENCFF446RML/"
+        },
+        {
+          "@id": "/files/ENCFF636RUO/"
+        },
+        {
+          "@id": "/files/ENCFF092PMH/"
+        },
+        {
+          "@id": "/files/ENCFF971GHV/"
+        },
+        {
+          "@id": "/files/ENCFF632OEM/"
+        },
+        {
+          "@id": "/files/ENCFF702QGN/"
+        },
+        {
+          "@id": "/files/ENCFF737YGE/"
+        },
+        {
+          "@id": "/files/ENCFF595ZZA/"
+        },
+        {
+          "@id": "/files/ENCFF246GXC/"
+        },
+        {
+          "@id": "/files/ENCFF609MXJ/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "5",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS394YZP",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/389d6225-10c7-4f3a-b651-2a8f28914ced/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "5",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS008PPG",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/891446ed-3820-4f3c-9def-0a5a2b9c2d07/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR228JND/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR228JND",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR228JND/",
+            "detail": "Metadata of RNA library {ENCLB562SFU|/libraries/ENCLB562SFU/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR228JND/",
+            "detail": "Metadata of RNA library {ENCLB124RGD|/libraries/ENCLB124RGD/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR228JND/",
+            "detail": "Experiment {ENCSR228JND|/experiments/ENCSR228JND/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism pupa 3 days post synchronization at white prepupa stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, white prepupa + 3 day (pupa)",
+      "files": [
+        {
+          "@id": "/files/ENCFF133GMC/"
+        },
+        {
+          "@id": "/files/ENCFF832QOI/"
+        },
+        {
+          "@id": "/files/ENCFF889OJP/"
+        },
+        {
+          "@id": "/files/ENCFF459HMU/"
+        },
+        {
+          "@id": "/files/ENCFF564QUG/"
+        },
+        {
+          "@id": "/files/ENCFF397KFH/"
+        },
+        {
+          "@id": "/files/ENCFF954HBW/"
+        },
+        {
+          "@id": "/files/ENCFF680ULG/"
+        },
+        {
+          "@id": "/files/ENCFF307DZG/"
+        },
+        {
+          "@id": "/files/ENCFF505SJM/"
+        },
+        {
+          "@id": "/files/ENCFF331KGD/"
+        },
+        {
+          "@id": "/files/ENCFF845HII/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "3",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS700CCE",
+              "life_stage": "pupa",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/05bdbb62-d269-4b44-9adb-d0c195a7e7b4/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "3",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS888SSH",
+              "life_stage": "pupa",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/a8508ed7-3240-426b-b9b1-2571a6d7afb1/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR895EHU/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR895EHU",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR895EHU/",
+            "detail": "Metadata of RNA library {ENCLB966PGD|/libraries/ENCLB966PGD/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR895EHU/",
+            "detail": "Metadata of RNA library {ENCLB526RVJ|/libraries/ENCLB526RVJ/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR895EHU/",
+            "detail": "Experiment {ENCSR895EHU|/experiments/ENCSR895EHU/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism third instar larva at puff stage: PS (3-6), light blue gut",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, puff stage. PS (3-6), light blue gut (third instar larva)",
+      "files": [
+        {
+          "@id": "/files/ENCFF167AFU/"
+        },
+        {
+          "@id": "/files/ENCFF926URD/"
+        },
+        {
+          "@id": "/files/ENCFF228CYZ/"
+        },
+        {
+          "@id": "/files/ENCFF727ZZU/"
+        },
+        {
+          "@id": "/files/ENCFF690VTP/"
+        },
+        {
+          "@id": "/files/ENCFF362JEW/"
+        },
+        {
+          "@id": "/files/ENCFF535ODK/"
+        },
+        {
+          "@id": "/files/ENCFF872QXQ/"
+        },
+        {
+          "@id": "/files/ENCFF862JNS/"
+        },
+        {
+          "@id": "/files/ENCFF345SZG/"
+        },
+        {
+          "@id": "/files/ENCFF350BRO/"
+        },
+        {
+          "@id": "/files/ENCFF086SXW/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS882ELK",
+              "synchronization": "puff stage: PS (3-6), light blue gut",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "third instar larva"
+            }
+          },
+          "@id": "/replicates/a33c4a3e-0050-405b-b65e-e06bb423f0cd/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS948GTP",
+              "synchronization": "puff stage: PS (3-6), light blue gut",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "third instar larva"
+            }
+          },
+          "@id": "/replicates/2bc2b891-9e4f-40b4-9180-74a479990629/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR703KGZ/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR703KGZ",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR703KGZ/",
+            "detail": "Metadata of RNA library {ENCLB145UVC|/libraries/ENCLB145UVC/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR703KGZ/",
+            "detail": "Metadata of RNA library {ENCLB035VYF|/libraries/ENCLB035VYF/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR703KGZ/",
+            "detail": "Experiment {ENCSR703KGZ|/experiments/ENCSR703KGZ/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism second instar larva",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (second instar larva)",
+      "files": [
+        {
+          "@id": "/files/ENCFF095OOK/"
+        },
+        {
+          "@id": "/files/ENCFF463UEG/"
+        },
+        {
+          "@id": "/files/ENCFF378UJK/"
+        },
+        {
+          "@id": "/files/ENCFF858EHE/"
+        },
+        {
+          "@id": "/files/ENCFF798JID/"
+        },
+        {
+          "@id": "/files/ENCFF496PSV/"
+        },
+        {
+          "@id": "/files/ENCFF619HHK/"
+        },
+        {
+          "@id": "/files/ENCFF075XDV/"
+        },
+        {
+          "@id": "/files/ENCFF724IZE/"
+        },
+        {
+          "@id": "/files/ENCFF588IRJ/"
+        },
+        {
+          "@id": "/files/ENCFF301HVE/"
+        },
+        {
+          "@id": "/files/ENCFF716DNU/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS077QOA",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "second instar larva"
+            }
+          },
+          "@id": "/replicates/6a092a88-879f-43de-b6d0-12751a8d02c3/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS813BCU",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "second instar larva"
+            }
+          },
+          "@id": "/replicates/1befda11-dca2-497d-8526-bae82f88d32a/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR335MJS/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR335MJS",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR335MJS/",
+            "detail": "Metadata of RNA library {ENCLB354NYR|/libraries/ENCLB354NYR/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR335MJS/",
+            "detail": "Metadata of RNA library {ENCLB112DOT|/libraries/ENCLB112DOT/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR335MJS/",
+            "detail": "Experiment {ENCSR335MJS|/experiments/ENCSR335MJS/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism embryo 10-12 hours post synchronization at egg laying stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-egg laying + 10-12 hour (embryonic)",
+      "files": [
+        {
+          "@id": "/files/ENCFF669SAW/"
+        },
+        {
+          "@id": "/files/ENCFF626BZP/"
+        },
+        {
+          "@id": "/files/ENCFF761BRZ/"
+        },
+        {
+          "@id": "/files/ENCFF415CSK/"
+        },
+        {
+          "@id": "/files/ENCFF421LYV/"
+        },
+        {
+          "@id": "/files/ENCFF200UCI/"
+        },
+        {
+          "@id": "/files/ENCFF502JLI/"
+        },
+        {
+          "@id": "/files/ENCFF491OFB/"
+        },
+        {
+          "@id": "/files/ENCFF289ZZT/"
+        },
+        {
+          "@id": "/files/ENCFF459BXH/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "10-12",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS904LLL",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/d5074164-d1f8-49a4-9322-2ba207e5e763/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "10-12",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS421GXK",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/1b0c825c-6995-436f-a343-704919f464f1/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR460VWL/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR460VWL",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR460VWL/",
+            "detail": "Metadata of RNA library {ENCLB638WYD|/libraries/ENCLB638WYD/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR460VWL/",
+            "detail": "Metadata of RNA library {ENCLB490HGP|/libraries/ENCLB490HGP/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR460VWL/",
+            "detail": "Experiment {ENCSR460VWL|/experiments/ENCSR460VWL/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism female adult 30 days post synchronization at eclosion stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-eclosion + 30 day (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF702NGY/"
+        },
+        {
+          "@id": "/files/ENCFF254KDV/"
+        },
+        {
+          "@id": "/files/ENCFF293BSL/"
+        },
+        {
+          "@id": "/files/ENCFF663ILO/"
+        },
+        {
+          "@id": "/files/ENCFF680DWH/"
+        },
+        {
+          "@id": "/files/ENCFF795KZB/"
+        },
+        {
+          "@id": "/files/ENCFF288WPQ/"
+        },
+        {
+          "@id": "/files/ENCFF386TPA/"
+        },
+        {
+          "@id": "/files/ENCFF160KQU/"
+        },
+        {
+          "@id": "/files/ENCFF187TIR/"
+        },
+        {
+          "@id": "/files/ENCFF679WQY/"
+        },
+        {
+          "@id": "/files/ENCFF975UZF/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "30",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS751AMA",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/e054fe73-8514-4d5c-be67-d63a8da8450a/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "30",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS791HGO",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/4e2d6a70-e148-4522-a616-526dd4750950/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR239UGA/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR239UGA",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR239UGA/",
+            "detail": "Metadata of RNA library {ENCLB103YOL|/libraries/ENCLB103YOL/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR239UGA/",
+            "detail": "Metadata of RNA library {ENCLB455ELI|/libraries/ENCLB455ELI/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR239UGA/",
+            "detail": "Experiment {ENCSR239UGA|/experiments/ENCSR239UGA/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism pupa 4 days post synchronization at white prepupa stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, white prepupa + 4 day (pupa)",
+      "files": [
+        {
+          "@id": "/files/ENCFF699BGM/"
+        },
+        {
+          "@id": "/files/ENCFF332NLE/"
+        },
+        {
+          "@id": "/files/ENCFF035XXM/"
+        },
+        {
+          "@id": "/files/ENCFF519KYE/"
+        },
+        {
+          "@id": "/files/ENCFF636ZOH/"
+        },
+        {
+          "@id": "/files/ENCFF372ALG/"
+        },
+        {
+          "@id": "/files/ENCFF225QRF/"
+        },
+        {
+          "@id": "/files/ENCFF270BQU/"
+        },
+        {
+          "@id": "/files/ENCFF021VXY/"
+        },
+        {
+          "@id": "/files/ENCFF824BXI/"
+        },
+        {
+          "@id": "/files/ENCFF218TTR/"
+        },
+        {
+          "@id": "/files/ENCFF279LFB/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "4",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS458NUY",
+              "life_stage": "pupa",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/d17a23c8-42cc-43ed-b96c-a53f9e729c17/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "4",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS093SVO",
+              "life_stage": "pupa",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/e02931c9-2f20-4555-9eb3-ebd1f6e5c3b6/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR144GEA/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR144GEA",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR144GEA/",
+            "detail": "Metadata of RNA library {ENCLB696BIS|/libraries/ENCLB696BIS/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR144GEA/",
+            "detail": "Metadata of RNA library {ENCLB900KUH|/libraries/ENCLB900KUH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR144GEA/",
+            "detail": "Experiment {ENCSR144GEA|/experiments/ENCSR144GEA/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism female adult 1 day post synchronization at eclosion stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-eclosion + 1 day (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF190ANH/"
+        },
+        {
+          "@id": "/files/ENCFF096JNZ/"
+        },
+        {
+          "@id": "/files/ENCFF058INH/"
+        },
+        {
+          "@id": "/files/ENCFF626AGY/"
+        },
+        {
+          "@id": "/files/ENCFF029ZSU/"
+        },
+        {
+          "@id": "/files/ENCFF805JXL/"
+        },
+        {
+          "@id": "/files/ENCFF432SGL/"
+        },
+        {
+          "@id": "/files/ENCFF890PPP/"
+        },
+        {
+          "@id": "/files/ENCFF924IVR/"
+        },
+        {
+          "@id": "/files/ENCFF483KDY/"
+        },
+        {
+          "@id": "/files/ENCFF005OYU/"
+        },
+        {
+          "@id": "/files/ENCFF756ESV/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "1",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS188ZFD",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/1cd0aa0d-2d60-42aa-826e-f82492146935/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "1",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS395CAG",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/76dacfb5-1107-4681-bd0b-f2f837210a66/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR620XFV/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR620XFV",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR620XFV/",
+            "detail": "Metadata of RNA library {ENCLB457DSC|/libraries/ENCLB457DSC/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR620XFV/",
+            "detail": "Metadata of RNA library {ENCLB739RBP|/libraries/ENCLB739RBP/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR620XFV/",
+            "detail": "Experiment {ENCSR620XFV|/experiments/ENCSR620XFV/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism male adult 30 days post synchronization at eclosion stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-eclosion + 30 day (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF596TNW/"
+        },
+        {
+          "@id": "/files/ENCFF362ALR/"
+        },
+        {
+          "@id": "/files/ENCFF727BYB/"
+        },
+        {
+          "@id": "/files/ENCFF811IHC/"
+        },
+        {
+          "@id": "/files/ENCFF885MVM/"
+        },
+        {
+          "@id": "/files/ENCFF707ZKS/"
+        },
+        {
+          "@id": "/files/ENCFF933NZW/"
+        },
+        {
+          "@id": "/files/ENCFF311OWP/"
+        },
+        {
+          "@id": "/files/ENCFF157JJG/"
+        },
+        {
+          "@id": "/files/ENCFF432AMN/"
+        },
+        {
+          "@id": "/files/ENCFF719MBV/"
+        },
+        {
+          "@id": "/files/ENCFF453LYB/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "30",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS386QOB",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/2f9e072d-0b45-4e07-8cad-163fb743e3a7/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "30",
+              "synchronization": "eclosion",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS017GFK",
+              "life_stage": "adult",
+              "post_synchronization_time_units": "day"
+            }
+          },
+          "@id": "/replicates/35e2ee6f-6506-4aec-9662-ddeedfe9e2e2/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR173SIS/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR173SIS",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR173SIS/",
+            "detail": "Metadata of RNA library {ENCLB816JVJ|/libraries/ENCLB816JVJ/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR173SIS/",
+            "detail": "Metadata of RNA library {ENCLB534DUZ|/libraries/ENCLB534DUZ/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR173SIS/",
+            "detail": "Experiment {ENCSR173SIS|/experiments/ENCSR173SIS/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism third instar larva",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (third instar larva)",
+      "files": [
+        {
+          "@id": "/files/ENCFF525GTN/"
+        },
+        {
+          "@id": "/files/ENCFF277IDH/"
+        },
+        {
+          "@id": "/files/ENCFF443UHS/"
+        },
+        {
+          "@id": "/files/ENCFF173HUP/"
+        },
+        {
+          "@id": "/files/ENCFF838RWF/"
+        },
+        {
+          "@id": "/files/ENCFF616VZN/"
+        },
+        {
+          "@id": "/files/ENCFF586AVQ/"
+        },
+        {
+          "@id": "/files/ENCFF919TEY/"
+        },
+        {
+          "@id": "/files/ENCFF370BTA/"
+        },
+        {
+          "@id": "/files/ENCFF583HOF/"
+        },
+        {
+          "@id": "/files/ENCFF829OGQ/"
+        },
+        {
+          "@id": "/files/ENCFF769BIG/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS555DIM",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "third instar larva"
+            }
+          },
+          "@id": "/replicates/9d64c996-9af8-40e1-9064-80fa321d5b48/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS565FRI",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "third instar larva"
+            }
+          },
+          "@id": "/replicates/f0f5c88c-d55a-4dc7-8c1b-af2fd88fbb90/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR153RID/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR153RID",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR153RID/",
+            "detail": "Metadata of RNA library {ENCLB043CGF|/libraries/ENCLB043CGF/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR153RID/",
+            "detail": "Metadata of RNA library {ENCLB289MRI|/libraries/ENCLB289MRI/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR153RID/",
+            "detail": "Experiment {ENCSR153RID|/experiments/ENCSR153RID/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism prepupa 24 hours post synchronization at white prepupa stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, white prepupa + 24 hour (prepupa)",
+      "files": [
+        {
+          "@id": "/files/ENCFF342ZBV/"
+        },
+        {
+          "@id": "/files/ENCFF915ARL/"
+        },
+        {
+          "@id": "/files/ENCFF489CGS/"
+        },
+        {
+          "@id": "/files/ENCFF878YXB/"
+        },
+        {
+          "@id": "/files/ENCFF382JEH/"
+        },
+        {
+          "@id": "/files/ENCFF090QUW/"
+        },
+        {
+          "@id": "/files/ENCFF749WNE/"
+        },
+        {
+          "@id": "/files/ENCFF731UWS/"
+        },
+        {
+          "@id": "/files/ENCFF716FIK/"
+        },
+        {
+          "@id": "/files/ENCFF750YSV/"
+        },
+        {
+          "@id": "/files/ENCFF738ZDH/"
+        },
+        {
+          "@id": "/files/ENCFF987YVI/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "24",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS386RMT",
+              "life_stage": "prepupa",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/23fd3868-a24e-43b7-8e48-df313f999330/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "24",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS590VEG",
+              "life_stage": "prepupa",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/be4996ba-d5c9-4cd9-9ba9-2804c5ddde30/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR322UBD/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR322UBD",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR322UBD/",
+            "detail": "Metadata of RNA library {ENCLB948IGD|/libraries/ENCLB948IGD/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR322UBD/",
+            "detail": "Metadata of RNA library {ENCLB571ZQX|/libraries/ENCLB571ZQX/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR322UBD/",
+            "detail": "Experiment {ENCSR322UBD|/experiments/ENCSR322UBD/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism prepupa 12 hours post synchronization at white prepupa stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, white prepupa + 12 hour (prepupa)",
+      "files": [
+        {
+          "@id": "/files/ENCFF518OOS/"
+        },
+        {
+          "@id": "/files/ENCFF255ZLD/"
+        },
+        {
+          "@id": "/files/ENCFF991DOT/"
+        },
+        {
+          "@id": "/files/ENCFF611TWN/"
+        },
+        {
+          "@id": "/files/ENCFF987TKK/"
+        },
+        {
+          "@id": "/files/ENCFF783HRL/"
+        },
+        {
+          "@id": "/files/ENCFF452LAO/"
+        },
+        {
+          "@id": "/files/ENCFF415MTV/"
+        },
+        {
+          "@id": "/files/ENCFF767ISS/"
+        },
+        {
+          "@id": "/files/ENCFF580QBO/"
+        },
+        {
+          "@id": "/files/ENCFF936YJM/"
+        },
+        {
+          "@id": "/files/ENCFF522FMC/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "12",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS421WJA",
+              "life_stage": "prepupa",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/e09a8836-175a-46df-ac2d-10eab5380f7d/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "12",
+              "synchronization": "white prepupa",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS311ACM",
+              "life_stage": "prepupa",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/ae1f9d4b-fa7a-4555-bee3-6583771aad3a/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR159TRQ/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR159TRQ",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR159TRQ/",
+            "detail": "Metadata of RNA library {ENCLB410HQF|/libraries/ENCLB410HQF/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR159TRQ/",
+            "detail": "Metadata of RNA library {ENCLB777HGD|/libraries/ENCLB777HGD/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR159TRQ/",
+            "detail": "Experiment {ENCSR159TRQ|/experiments/ENCSR159TRQ/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "Sequenced isogenic reference wild type strain whole organism female adult",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF231FIF/"
+        },
+        {
+          "@id": "/files/ENCFF720OJP/"
+        },
+        {
+          "@id": "/files/ENCFF141UBZ/"
+        },
+        {
+          "@id": "/files/ENCFF934ISC/"
+        },
+        {
+          "@id": "/files/ENCFF497NTT/"
+        },
+        {
+          "@id": "/files/ENCFF195ULG/"
+        },
+        {
+          "@id": "/files/ENCFF907TGH/"
+        },
+        {
+          "@id": "/files/ENCFF590LFG/"
+        },
+        {
+          "@id": "/files/ENCFF406CJR/"
+        },
+        {
+          "@id": "/files/ENCFF573FEW/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS568QSZ",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/d3f901cb-b5f5-498b-891c-3272532c78ee/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS634RHC",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/715b169f-ea13-4f09-a0e1-adeb8a348742/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR290EKV/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR290EKV",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR290EKV/",
+            "detail": "Metadata of RNA library {ENCLB312RFC|/libraries/ENCLB312RFC/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR290EKV/",
+            "detail": "Metadata of RNA library {ENCLB113JOV|/libraries/ENCLB113JOV/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR290EKV/",
+            "detail": "Experiment {ENCSR290EKV|/experiments/ENCSR290EKV/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "Sequenced isogenic reference wild type strain, core 40 set whole organism female adult",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF761TAN/"
+        },
+        {
+          "@id": "/files/ENCFF101ZZP/"
+        },
+        {
+          "@id": "/files/ENCFF512JCG/"
+        },
+        {
+          "@id": "/files/ENCFF511XIV/"
+        },
+        {
+          "@id": "/files/ENCFF173MLW/"
+        },
+        {
+          "@id": "/files/ENCFF155RAT/"
+        },
+        {
+          "@id": "/files/ENCFF767CGL/"
+        },
+        {
+          "@id": "/files/ENCFF624JUX/"
+        },
+        {
+          "@id": "/files/ENCFF961UBE/"
+        },
+        {
+          "@id": "/files/ENCFF425DJI/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS733DKF",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/b943bcd9-7e02-4350-856d-4183e2258f30/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS221PMM",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/ec4a4c76-cdb4-4e1d-bc2e-97c4d37fcc0d/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR403IFZ/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR403IFZ",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR403IFZ/",
+            "detail": "Metadata of RNA library {ENCLB430YEB|/libraries/ENCLB430YEB/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR403IFZ/",
+            "detail": "Metadata of RNA library {ENCLB329GUT|/libraries/ENCLB329GUT/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR403IFZ/",
+            "detail": "Experiment {ENCSR403IFZ|/experiments/ENCSR403IFZ/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism first instar larva",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (first instar larva)",
+      "files": [
+        {
+          "@id": "/files/ENCFF876MOF/"
+        },
+        {
+          "@id": "/files/ENCFF594CXL/"
+        },
+        {
+          "@id": "/files/ENCFF823KVU/"
+        },
+        {
+          "@id": "/files/ENCFF107MOY/"
+        },
+        {
+          "@id": "/files/ENCFF481OEI/"
+        },
+        {
+          "@id": "/files/ENCFF511MLI/"
+        },
+        {
+          "@id": "/files/ENCFF473KFR/"
+        },
+        {
+          "@id": "/files/ENCFF427NOC/"
+        },
+        {
+          "@id": "/files/ENCFF388JOS/"
+        },
+        {
+          "@id": "/files/ENCFF759YNO/"
+        },
+        {
+          "@id": "/files/ENCFF430HWM/"
+        },
+        {
+          "@id": "/files/ENCFF146FHT/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS695DSM",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "first instar larva"
+            }
+          },
+          "@id": "/replicates/981a5d23-bb28-4965-bc9e-0ce369dff1e1/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS619OTW",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "first instar larva"
+            }
+          },
+          "@id": "/replicates/a0d4bae1-1cb0-460b-948e-3cd7cfe35181/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR744FUI/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR744FUI",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR744FUI/",
+            "detail": "Metadata of RNA library {ENCLB302OFW|/libraries/ENCLB302OFW/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR744FUI/",
+            "detail": "Metadata of RNA library {ENCLB761OUL|/libraries/ENCLB761OUL/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR744FUI/",
+            "detail": "Experiment {ENCSR744FUI|/experiments/ENCSR744FUI/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "Sequenced isogenic reference wild type strain whole organism female adult",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (adult)",
+      "files": [
+        {
+          "@id": "/files/ENCFF142RHZ/"
+        },
+        {
+          "@id": "/files/ENCFF714YQQ/"
+        },
+        {
+          "@id": "/files/ENCFF042SKQ/"
+        },
+        {
+          "@id": "/files/ENCFF114ITP/"
+        },
+        {
+          "@id": "/files/ENCFF671WXL/"
+        },
+        {
+          "@id": "/files/ENCFF875PLT/"
+        },
+        {
+          "@id": "/files/ENCFF324VOR/"
+        },
+        {
+          "@id": "/files/ENCFF779YYJ/"
+        },
+        {
+          "@id": "/files/ENCFF010IJS/"
+        },
+        {
+          "@id": "/files/ENCFF332XVA/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS579LMQ",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/ff9399c4-b817-4458-92c1-efeb5dba8606/",
+          "biological_replicate_number": 2
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS601AKQ",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "adult"
+            }
+          },
+          "@id": "/replicates/fc0c04a6-786c-41f5-ad43-19acf29eec7b/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR010LOI/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR010LOI",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR010LOI/",
+            "detail": "Metadata of RNA library {ENCLB769IUR|/libraries/ENCLB769IUR/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR010LOI/",
+            "detail": "Metadata of RNA library {ENCLB287RUG|/libraries/ENCLB287RUG/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR010LOI/",
+            "detail": "Experiment {ENCSR010LOI|/experiments/ENCSR010LOI/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism third instar larva at puff stage: PS (7-9), clear gut",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, puff stage. PS (7-9), clear gut (third instar larva)",
+      "files": [
+        {
+          "@id": "/files/ENCFF114XUZ/"
+        },
+        {
+          "@id": "/files/ENCFF421YWO/"
+        },
+        {
+          "@id": "/files/ENCFF759NIF/"
+        },
+        {
+          "@id": "/files/ENCFF468PNG/"
+        },
+        {
+          "@id": "/files/ENCFF784XKK/"
+        },
+        {
+          "@id": "/files/ENCFF781MBR/"
+        },
+        {
+          "@id": "/files/ENCFF171QIN/"
+        },
+        {
+          "@id": "/files/ENCFF484VOD/"
+        },
+        {
+          "@id": "/files/ENCFF748IRW/"
+        },
+        {
+          "@id": "/files/ENCFF971TZP/"
+        },
+        {
+          "@id": "/files/ENCFF422WHO/"
+        },
+        {
+          "@id": "/files/ENCFF296MPX/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS024XIW",
+              "synchronization": "puff stage: PS (7-9), clear gut",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "third instar larva"
+            }
+          },
+          "@id": "/replicates/7938f7e9-60a7-45c0-8f7c-5e9cb9ef04b0/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS672REK",
+              "synchronization": "puff stage: PS (7-9), clear gut",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "third instar larva"
+            }
+          },
+          "@id": "/replicates/fa081c0c-bf04-4a45-9140-4b6b8edfe0d5/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR162WPD/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR162WPD",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR162WPD/",
+            "detail": "Metadata of RNA library {ENCLB527QQI|/libraries/ENCLB527QQI/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR162WPD/",
+            "detail": "Metadata of RNA library {ENCLB298SVP|/libraries/ENCLB298SVP/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR162WPD/",
+            "detail": "Experiment {ENCSR162WPD|/experiments/ENCSR162WPD/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism embryo 20-22 hours post synchronization at egg laying stage",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms, post-egg laying + 20-22 hour (embryonic)",
+      "files": [
+        {
+          "@id": "/files/ENCFF826NBD/"
+        },
+        {
+          "@id": "/files/ENCFF014RMP/"
+        },
+        {
+          "@id": "/files/ENCFF715KSR/"
+        },
+        {
+          "@id": "/files/ENCFF603MXK/"
+        },
+        {
+          "@id": "/files/ENCFF453NTY/"
+        },
+        {
+          "@id": "/files/ENCFF931MVP/"
+        },
+        {
+          "@id": "/files/ENCFF816QWM/"
+        },
+        {
+          "@id": "/files/ENCFF354OXS/"
+        },
+        {
+          "@id": "/files/ENCFF198ZRU/"
+        },
+        {
+          "@id": "/files/ENCFF982OGI/"
+        },
+        {
+          "@id": "/files/ENCFF915FYA/"
+        },
+        {
+          "@id": "/files/ENCFF803HQP/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 2,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "20-22",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS202CUD",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/dc82a1a2-fbb8-4ab0-90db-0f001e4a6ba8/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "post_synchronization_time": "20-22",
+              "synchronization": "egg laying",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "age": "unknown",
+              "accession": "ENCBS202CUD",
+              "life_stage": "embryonic",
+              "post_synchronization_time_units": "hour"
+            }
+          },
+          "@id": "/replicates/186d1c24-38c7-4332-8803-edc13be41622/",
+          "biological_replicate_number": 1
+        }
+      ],
+      "status": "released"
+    },
+    {
+      "@id": "/experiments/ENCSR066STJ/",
+      "@type": [
+        "Experiment",
+        "Dataset",
+        "Item"
+      ],
+      "accession": "ENCSR066STJ",
+      "assay_term_name": "RNA-seq",
+      "assay_title": "total RNA-seq",
+      "audit": {
+        "INTERNAL_ACTION": [
+          {
+            "path": "/experiments/ENCSR066STJ/",
+            "detail": "Metadata of RNA library {ENCLB021HCQ|/libraries/ENCLB021HCQ/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR066STJ/",
+            "detail": "Metadata of RNA library {ENCLB324EFH|/libraries/ENCLB324EFH/} lacks specification of the rna integrity number.",
+            "level": 30,
+            "category": "missing RIN",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          },
+          {
+            "path": "/experiments/ENCSR066STJ/",
+            "detail": "Experiment {ENCSR066STJ|/experiments/ENCSR066STJ/} is released, but is not submitted to GEO.",
+            "level": 30,
+            "category": "experiment not submitted to GEO",
+            "name": "audit_experiment",
+            "level_name": "INTERNAL_ACTION"
+          }
+        ]
+      },
+      "award": {
+        "project": "modENCODE"
+      },
+      "biosample_ontology": {
+        "term_name": "whole organism"
+      },
+      "biosample_summary": "strain yellow cinnabar brown speck whole organism prepupa",
+      "description": "RNA-seq on ribo-depleted total RNA from whole organisms (prepupa)",
+      "files": [
+        {
+          "@id": "/files/ENCFF734NVM/"
+        },
+        {
+          "@id": "/files/ENCFF869PUT/"
+        },
+        {
+          "@id": "/files/ENCFF615UBY/"
+        },
+        {
+          "@id": "/files/ENCFF618YJO/"
+        },
+        {
+          "@id": "/files/ENCFF489FKJ/"
+        },
+        {
+          "@id": "/files/ENCFF904OJB/"
+        },
+        {
+          "@id": "/files/ENCFF504VJI/"
+        },
+        {
+          "@id": "/files/ENCFF506XOA/"
+        },
+        {
+          "@id": "/files/ENCFF064BES/"
+        },
+        {
+          "@id": "/files/ENCFF730ZRK/"
+        },
+        {
+          "@id": "/files/ENCFF081ITM/"
+        },
+        {
+          "@id": "/files/ENCFF467QUL/"
+        }
+      ],
+      "lab": {
+        "title": "Brenton Graveley, UConn"
+      },
+      "replicates": [
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS862QAE",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "prepupa"
+            }
+          },
+          "@id": "/replicates/270dfad8-cb90-434c-8619-702d8b6b3899/",
+          "biological_replicate_number": 1
+        },
+        {
+          "technical_replicate_number": 1,
+          "library": {
+            "biosample": {
+              "age": "unknown",
+              "accession": "ENCBS433KXV",
+              "organism": {
+                "scientific_name": "Drosophila melanogaster"
+              },
+              "life_stage": "prepupa"
+            }
+          },
+          "@id": "/replicates/527cbb70-2d06-47f8-9ac0-128e5f940e16/",
+          "biological_replicate_number": 2
+        }
+      ],
+      "status": "released"
+    }
+  ],
+  "@id": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&format=json",
+  "@type": [
+    "Search"
+  ],
+  "all": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&format=json&limit=all",
+  "clear_filters": "/search/?type=Experiment",
+  "columns": {
+    "@id": {
+      "title": "ID"
+    },
+    "accession": {
+      "title": "Accession"
+    },
+    "assay_term_name": {
+      "title": "Assay name"
+    },
+    "assay_title": {
+      "title": "Assay title"
+    },
+    "target.label": {
+      "title": "Target of assay"
+    },
+    "target.genes.symbol": {
+      "title": "Target gene symbol"
+    },
+    "biosample_summary": {
+      "title": "Biosample summary"
+    },
+    "biosample_ontology.term_name": {
+      "title": "Biosample term name"
+    },
+    "description": {
+      "title": "Description"
+    },
+    "lab.title": {
+      "title": "Lab"
+    },
+    "award.project": {
+      "title": "Project"
+    },
+    "status": {
+      "title": "Status"
+    },
+    "files.@id": {
+      "title": "Files"
+    },
+    "replicates.library.biosample.accession": {
+      "title": "Biosample accession"
+    },
+    "replicates.biological_replicate_number": {
+      "title": "Biological replicate"
+    },
+    "replicates.technical_replicate_number": {
+      "title": "Technical replicate"
+    },
+    "replicates.antibody.accession": {
+      "title": "Linked antibody"
+    },
+    "replicates.library.biosample.organism.scientific_name": {
+      "title": "Organism"
+    },
+    "replicates.library.biosample.life_stage": {
+      "title": "Life stage"
+    },
+    "replicates.library.biosample.age": {
+      "title": "Age"
+    },
+    "replicates.library.biosample.age_units": {
+      "title": "Age units"
+    },
+    "replicates.library.biosample.treatments.treatment_term_name": {
+      "title": "Biosample treatment"
+    },
+    "replicates.library.biosample.treatments.treatment_term_id": {
+      "title": "Biosample treatment ontology ID"
+    },
+    "replicates.library.biosample.treatments.concentration": {
+      "title": "Biosample treatment concentration"
+    },
+    "replicates.library.biosample.treatments.concentration_units": {
+      "title": "Biosample treatment concentration units"
+    },
+    "replicates.library.biosample.treatments.duration": {
+      "title": "Biosample treatment duration"
+    },
+    "replicates.library.biosample.treatments.duration_units": {
+      "title": "Biosample treatment duration units"
+    },
+    "replicates.library.biosample.synchronization": {
+      "title": "Synchronization"
+    },
+    "replicates.library.biosample.post_synchronization_time": {
+      "title": "Post-synchronization time"
+    },
+    "replicates.library.biosample.post_synchronization_time_units": {
+      "title": "Post-synchronization time units"
+    },
+    "replicates.@id": {
+      "title": "Replicates"
+    }
+  },
+  "facets": [
+    {
+      "title": "Data Type",
+      "field": "type",
+      "total": 38,
+      "terms": [
+        {
+          "key": "Dataset",
+          "doc_count": 38
+        },
+        {
+          "key": "Experiment",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Assay type",
+      "field": "assay_slims",
+      "total": 38,
+      "terms": [
+        {
+          "key": "Transcription",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Assay title",
+      "field": "assay_title",
+      "total": 38,
+      "terms": [
+        {
+          "key": "total RNA-seq",
+          "doc_count": 38
+        }
+      ],
+      "type": "typeahead",
+      "appended": "false"
+    },
+    {
+      "title": "Status",
+      "field": "status",
+      "total": 38,
+      "terms": [
+        {
+          "key": "released",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Project",
+      "field": "award.project",
+      "total": 38,
+      "terms": [
+        {
+          "key": "modENCODE",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "RFA",
+      "field": "award.rfa",
+      "total": 38,
+      "terms": [
+        {
+          "key": "modENCODE",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Genome assembly",
+      "field": "assembly",
+      "total": 38,
+      "terms": [
+        {
+          "key": "dm3",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Organism",
+      "field": "replicates.library.biosample.donor.organism.scientific_name",
+      "total": 38,
+      "terms": [
+        {
+          "key": "Drosophila melanogaster",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Biosample classification",
+      "field": "biosample_ontology.classification",
+      "total": 38,
+      "terms": [
+        {
+          "key": "whole organisms",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Biosample term name",
+      "field": "biosample_ontology.term_name",
+      "total": 108,
+      "terms": [
+        {
+          "key": "whole organism",
+          "doc_count": 38
+        },
+        {
+          "key": "ML-DmBG3-c2",
+          "doc_count": 12
+        },
+        {
+          "key": "head",
+          "doc_count": 9
+        },
+        {
+          "key": "Kc167",
+          "doc_count": 6
+        },
+        {
+          "key": "carcass",
+          "doc_count": 4
+        },
+        {
+          "key": "digestive system",
+          "doc_count": 4
+        },
+        {
+          "key": "arthropod fat body",
+          "doc_count": 3
+        },
+        {
+          "key": "central nervous system",
+          "doc_count": 2
+        },
+        {
+          "key": "ovary",
+          "doc_count": 2
+        },
+        {
+          "key": "salivary gland",
+          "doc_count": 2
+        },
+        {
+          "key": "1182-4H",
+          "doc_count": 1
+        },
+        {
+          "key": "CME-L1",
+          "doc_count": 1
+        },
+        {
+          "key": "CME-W1-Cl.8+",
+          "doc_count": 1
+        },
+        {
+          "key": "CME-W2",
+          "doc_count": 1
+        },
+        {
+          "key": "GM2",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmBG1-c1",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmBG2-c2",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD11",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD16-c3",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD17-c3",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD20-c2",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD20-c5",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD21",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD32",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD4-c1",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD8",
+          "doc_count": 1
+        },
+        {
+          "key": "ML-DmD9",
+          "doc_count": 1
+        },
+        {
+          "key": "S1",
+          "doc_count": 1
+        },
+        {
+          "key": "S2",
+          "doc_count": 1
+        },
+        {
+          "key": "S2R+",
+          "doc_count": 1
+        },
+        {
+          "key": "S3",
+          "doc_count": 1
+        },
+        {
+          "key": "Sg4",
+          "doc_count": 1
+        },
+        {
+          "key": "imaginal disc",
+          "doc_count": 1
+        },
+        {
+          "key": "male accessory sex gland",
+          "doc_count": 1
+        },
+        {
+          "key": "mbn2",
+          "doc_count": 1
+        },
+        {
+          "key": "testis",
+          "doc_count": 1
+        }
+      ],
+      "type": "typeahead",
+      "appended": "false"
+    },
+    {
+      "title": "Life stage",
+      "field": "replicates.library.biosample.life_stage",
+      "total": 38,
+      "terms": [
+        {
+          "key": "adult",
+          "doc_count": 14
+        },
+        {
+          "key": "embryonic",
+          "doc_count": 12
+        },
+        {
+          "key": "prepupa",
+          "doc_count": 3
+        },
+        {
+          "key": "pupa",
+          "doc_count": 3
+        },
+        {
+          "key": "third instar larva",
+          "doc_count": 3
+        },
+        {
+          "key": "first instar larva",
+          "doc_count": 1
+        },
+        {
+          "key": "second instar larva",
+          "doc_count": 1
+        },
+        {
+          "key": "wandering third instar larva",
+          "doc_count": 1
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Available file types",
+      "field": "files.file_type",
+      "total": 38,
+      "terms": [
+        {
+          "key": "bam",
+          "doc_count": 38
+        },
+        {
+          "key": "bigWig",
+          "doc_count": 38
+        },
+        {
+          "key": "fastq",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Platform",
+      "field": "files.platform.term_name",
+      "total": 38,
+      "terms": [
+        {
+          "key": "Illumina HiSeq 2000",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Run type",
+      "field": "files.run_type",
+      "total": 38,
+      "terms": [
+        {
+          "key": "paired-ended",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Read length (nt)",
+      "field": "files.read_length",
+      "total": 38,
+      "terms": [
+        {
+          "key": 100,
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Library fragment size (nt)",
+      "field": "replicates.library.size_range",
+      "total": 38,
+      "terms": [
+        {
+          "key": ">200",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Library material",
+      "field": "replicates.library.nucleic_acid_term_name",
+      "total": 38,
+      "terms": [
+        {
+          "key": "RNA",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Library depleted in",
+      "field": "replicates.library.depleted_in_term_name",
+      "total": 38,
+      "terms": [
+        {
+          "key": "rRNA",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Date released",
+      "field": "date_released",
+      "total": 38,
+      "terms": [
+        {
+          "key": "2014-03-31",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Date submitted",
+      "field": "date_submitted",
+      "total": 38,
+      "terms": [
+        {
+          "key": "2014-03-31",
+          "doc_count": 38
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Lab",
+      "field": "lab.title",
+      "total": 50,
+      "terms": [
+        {
+          "key": "Brenton Graveley, UConn",
+          "doc_count": 38
+        },
+        {
+          "key": "Susan Celniker, LBNL",
+          "doc_count": 12
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Internal status",
+      "field": "internal_status",
+      "total": 38,
+      "terms": [
+        {
+          "key": "unreviewed",
+          "doc_count": 37
+        },
+        {
+          "key": "requires lab review",
+          "doc_count": 1
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    },
+    {
+      "title": "Replication type",
+      "field": "replication_type",
+      "total": 38,
+      "terms": [
+        {
+          "key": "isogenic",
+          "doc_count": 31
+        },
+        {
+          "key": "unreplicated",
+          "doc_count": 7
+        }
+      ],
+      "type": "terms",
+      "appended": "false"
+    }
+  ],
+  "filters": [
+    {
+      "field": "replicates.library.biosample.donor.organism.scientific_name",
+      "term": "Drosophila melanogaster",
+      "remove": "/search/?type=Experiment&assay_slims=Transcription&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&format=json"
+    },
+    {
+      "field": "assay_slims",
+      "term": "Transcription",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&format=json"
+    },
+    {
+      "field": "assay_title",
+      "term": "total RNA-seq",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&biosample_ontology.term_name=whole+organism&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&format=json"
+    },
+    {
+      "field": "biosample_ontology.term_name",
+      "term": "whole organism",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&assay_title=total+RNA-seq&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&assay_title=total+RNA-seq&format=json"
+    },
+    {
+      "field": "assay_title",
+      "term": "total RNA-seq",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&biosample_ontology.term_name=whole+organism&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&format=json"
+    },
+    {
+      "field": "lab.title",
+      "term": "Brenton Graveley, UConn",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&format=json"
+    },
+    {
+      "field": "biosample_ontology.term_name",
+      "term": "whole organism",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&assay_title=total+RNA-seq&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&assay_title=total+RNA-seq&format=json"
+    },
+    {
+      "field": "assay_title",
+      "term": "total RNA-seq",
+      "remove": "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&biosample_ontology.term_name=whole+organism&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&format=json"
+    },
+    {
+      "field": "type",
+      "term": "Experiment",
+      "remove": "/search/?replicates.library.biosample.donor.organism.scientific_name=Drosophila+melanogaster&assay_slims=Transcription&assay_title=total+RNA-seq&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&lab.title=Brenton+Graveley%2C+UConn&biosample_ontology.term_name=whole+organism&assay_title=total+RNA-seq&format=json"
+    }
+  ],
+  "notification": "Success",
+  "sort": {
+    "date_created": {
+      "unmapped_type": "keyword",
+      "order": "desc"
+    },
+    "label": {
+      "unmapped_type": "keyword",
+      "order": "desc"
+    },
+    "uuid": {
+      "unmapped_type": "keyword",
+      "order": "desc"
+    }
+  },
+  "title": "Search",
+  "total": 38
+}

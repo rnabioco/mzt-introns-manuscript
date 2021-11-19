@@ -1,0 +1,114 @@
+
+""" rules for star mapping """
+
+def _star_fq_types(wildcards):
+  """ lookup global dictionary LIB_MAP via sample
+      and lookup fastq suffixes
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     fq_types = config[lib_attrs]["fq"]
+     
+     if len(fq_types) == 1:
+       suffixes = [""]
+     elif len(fq_types) > 1:
+       suffixes = ["_R1", "_R2"]
+     fq_names = [path.join(wildcards.data,
+                           "fastq",
+                           "trimmed",
+                           wildcards.species, 
+                           wildcards.expt,
+                           wildcards.sample + x + "_trimmed.fastq.gz") for
+                           x in suffixes]
+  else:
+     sys.exit("no fastq suffixes found for library: {}".format(id))
+  return fq_names
+
+def _fqlist_to_str(wildcards):
+    fqs = _star_fq_types(wildcards)
+    return " ".join(fqs)
+
+rule star_align:
+    """ map reads to genome/transcriptome using STAR 
+    """
+    input:
+      _star_fq_types, 
+      idx_dummy_file = path.join("{data}", "star", "logs", "{species}_index_tracking.txt"), 
+    output:
+      bam = "{data}/star/{species}/{expt}/{sample}/{sample}_sorted.bam",
+      bai = "{data}/star/{species}/{expt}/{sample}/{sample}_sorted.bam.bai",
+    params:
+      tmpbam = "{data}/star/{species}/{expt}/{sample}/{sample}_Aligned.out.bam",
+      genome = lambda wildcards: GENOME_DIRS[wildcards.species],
+      io = _fqlist_to_str, 
+      out = "{data}/star/{species}/{expt}/{sample}/{sample}_",
+    log:
+      "{data}/star/logs/{species}/{expt}/{sample}_align.txt"
+    message:
+      "running star alignments "
+    threads:
+      12
+    resources: 
+      all_threads=12,
+      mem_mb=MEM_ALLOC["STAR"]
+    shell:
+      """
+
+      STAR \
+        --genomeDir {params.genome}  \
+        --runThreadN {threads} \
+        --outBAMsortingThreadN {threads} \
+        --readFilesIn {params.io}  \
+        --readFilesCommand gunzip -c \
+        --outFileNamePrefix {params.out} \
+        --outFilterMultimapNmax 20 --outFilterMismatchNmax 10 --outFilterMismatchNoverReadLmax 0.04 \
+        --outSAMmultNmax 20 --outMultimapperOrder Random  --outSAMprimaryFlag AllBestScore \
+        --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 \
+        --alignSJoverhangMin 8  --alignSJDBoverhangMin 1 --sjdbScore 1 \
+        --outFilterType BySJout \
+        --outSAMunmapped Within \
+        --outSAMtype BAM Unsorted --outSAMmode Full \
+        --limitSjdbInsertNsj=1500000 \
+        --outSAMattributes All  --outSAMattrIHstart 0  --outSAMstrandField intronMotif 
+
+      samtools sort -@ 11 {params.tmpbam} > {output.bam}
+      samtools index -@ 4 {output.bam}
+      
+      """
+
+rule star_idx:
+  input:
+    lambda wildcards: GENOMES[wildcards.species]
+  output:
+    path.join("{data}", "star", "logs", "{species}_index_tracking.txt"), 
+  params:
+    genome_dir = lambda wildcards: GENOME_DIRS[wildcards.species],
+    genome = lambda wildcards: GENOMES[wildcards.species],
+    transcripts = lambda wildcards: TRANSCRIPTS[wildcards.species],
+  log:
+    path.join("{data}", "star", "logs", "{species}_idx.txt")
+  message:
+    "building star index "
+  threads:
+    24
+  resources: 
+      all_threads=24,
+      mem_mb=MEM_ALLOC["STAR"]
+  shell:
+    """
+    mkdir -p {params.genome_dir}
+
+    STAR --runMode genomeGenerate \
+      --genomeDir {params.genome_dir}  \
+      --genomeFastaFiles {params.genome} \
+      --runThreadN {threads} \
+      --sjdbGTFfile {params.transcripts} \
+      --limitGenomeGenerateRAM 100000000000
+
+    # create dummy file
+    if [ -f {params.genome_dir}"/Genome" ]; then
+        touch {output}
+    fi
+    
+    """

@@ -1,0 +1,108 @@
+shell.executable("/bin/bash")
+
+from os import path
+from glob import glob
+import sys
+import itertools
+
+""" Snakemake pipeline for intron quantification of MZT timecourse datasets """ 
+
+DATA = config["DATA"]
+SRC = config["SRC"]
+RSRC = config["RSRC"]
+DBASES = config["DBASES"]
+
+# The following are all dictionaries that are accessed using functions in 
+# the snakemake rules
+
+GENOMES = config["GENOMES"]
+TRANSCRIPTS = config["TRANSCRIPTS"]
+CHROM_SIZES = config["CHROM_SIZES"]
+GENOME_DIRS = config["GENOME_DIRS"]
+INTRONS = config["INTRONS"]
+EXONS = config["EXONS"]
+MEM_ALLOC = config["MALLOC"]
+CLUSTER = config["CLUSTER"]
+
+for k in MEM_ALLOC:
+  if CLUSTER == "LSF":
+    MEM_ALLOC[k] = int(int(MEM_ALLOC[k]) / 1024)
+  else:
+    MEM_ALLOC[k] = int(MEM_ALLOC)
+
+LIB_MAP = {}
+EXPT = []
+SPECIES = [] 
+SAMPLES = []
+
+with open(config["LIB_PARAMS"], 'r') as f:
+    hdr = f.readline()
+    for line in f:
+        if line.startswith("#"): continue
+        fields = line.split()
+        LIB_MAP[fields[0]] = fields[1]
+        EXPT.append(fields[1])
+        SPECIES.append(fields[2])
+        SAMPLES.append(fields[0])
+
+if len(SPECIES) == 0 or len(SAMPLES) == 0 or len(EXPT) == 0:
+    sys.exit(f"unable to parse lib params file {config['LIB_PARAMS']}")
+
+if len(set(EXPT)) > 1:
+    sys.exit(f"pipeline can only process 1 experiment at a time")
+
+print("processing the following libraries")
+[print("library {} from species {} from experiment {}".format(x,
+                                                              SPECIES[i],
+                                                              LIB_MAP[x])) for i, x in enumerate(SAMPLES)]
+
+SPECIES = list(set(SPECIES))[0]
+EXPT = list(set(EXPT))[0]
+
+FASTA_TYPE = "eisa"
+MSKED_FASTA = "eisa_masked"
+
+T0_EXPT = EXPT 
+T0_SAMPLES = config["T0_SAMPLES"]
+
+traditional_alignment_outputs = []
+
+if INTRONS[SPECIES] != "" and EXONS[SPECIES] != "":
+    traditional_alignment_outputs = expand(path.join(DATA,
+                           "featurecounts",
+                           SPECIES,
+                           EXPT,
+                           "{sample}_intron_exon_counts.tsv"),
+       sample = SAMPLES),
+  
+rule all:
+  input: 
+    path.join(DBASES, SPECIES, "eisa.fa"),
+    path.join(DBASES, SPECIES, "eisa", "eisaR.gtf"),
+    path.join(DBASES, SPECIES, "bt2", FASTA_TYPE + ".1.bt2"),
+
+    expand(path.join(DATA, "bt2", SPECIES, T0_EXPT, FASTA_TYPE, "{sample}.bam"),
+      sample = T0_SAMPLES), 
+    
+    expand(path.join(DATA, "bigwigs", SPECIES, "bt2", FASTA_TYPE, T0_EXPT, "{sample}_{orient}.bw"),
+       sample = T0_SAMPLES,
+       orient = ["fwd", "rev"]),
+     
+    path.join(DBASES, SPECIES, "bt2", MSKED_FASTA + ".1.bt2"),
+    
+    expand(path.join(DATA, "bt2", SPECIES, EXPT, MSKED_FASTA, "{sample}.bam"),
+      sample = SAMPLES), 
+
+    expand(path.join(DATA, "salmon_bt2_masked", SPECIES, EXPT,
+        MSKED_FASTA, "{sample}", "quant.sf"),
+           sample = SAMPLES), 
+    traditional_alignment_outputs    
+
+
+include: "rules/qc.snake"    
+include: "rules/cutadapt.snake"
+include: "rules/star.snake"
+include: "rules/make_bigwigs.snake"
+include: "rules/bowtie2.snake"
+include: "rules/eisa.snake"
+include: "rules/featurecounts.snake"

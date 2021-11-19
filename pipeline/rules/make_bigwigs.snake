@@ -1,0 +1,181 @@
+
+""" rules to generate bigwigs """
+
+def _get_bedgraphs(wildcards):
+  
+  """ lookup global dictionary LIB_MAP via sample
+      wildcard and return settings for strand 
+      based on experiment definition in config file 
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     strand_settings = config[lib_attrs]["stranded"]
+  else:
+     print("WARNING: no stranded settings found for library: {}".format(id),
+       file = sys.stderr)
+     strand_settings = ""
+  
+  bg_fns = []
+  bg_basename = path.join(DATA, 
+                          "star", 
+                          wildcards.species,
+                          wildcards.expt)
+
+  if strand_settings == "forward":
+    fwd_bg = wildcards.sample + "_Signal.UniqueMultiple.str1.out.bg"
+    rev_bg = wildcards.sample + "_Signal.UniqueMultiple.str2.out.bg"
+  elif strand_settings == "reverse":
+    fwd_bg = wildcards.sample + "_Signal.UniqueMultiple.str2.out.bg"
+    rev_bg = wildcards.sample + "_Signal.UniqueMultiple.str1.out.bg"
+  else:
+    sys.exit("unknown setting for stranded: {}".format(strand_settings))
+
+  bg_fns = [path.join(bg_basename, x) for x in [fwd_bg, rev_bg]]
+
+  return bg_fns
+
+
+def _deeptools_strand_setting(wildcards):
+  """
+  bamCoverage assumes that the library is reverse stranded
+  """
+  
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     strand_settings = config[lib_attrs]["stranded"]
+  else:
+     print("WARNING: no stranded settings found for library: {}".format(id),
+       file = sys.stderr)
+     strand_settings = ""
+  
+  if strand_settings == "forward":
+    strand_cmd = ["reverse", "forward"]
+  elif strand_settings == "reverse":
+    strand_cmd = ["forward", "reverse"]
+  else:
+    sys.exit("unknown setting for stranded: {}".format(strand_settings))
+
+  return strand_cmd
+  
+
+def _bedtools_strand_setting(wildcards):
+  
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     strand_settings = config[lib_attrs]["stranded"]
+  else:
+     print("WARNING: no stranded settings found for library: {}".format(id),
+       file = sys.stderr)
+     strand_settings = ""
+  
+  if strand_settings == "forward":
+    strand_cmd = ["+", "-"]
+  elif strand_settings == "reverse":
+    strand_cmd = ["-", "+"]
+  else:
+    sys.exit("unknown setting for stranded: {}".format(strand_settings))
+
+  return strand_cmd
+
+
+
+rule bt2_tx_bam_to_bigwig:
+  input:
+    bam = path.join(DATA, "bt2", "{species}", "{expt}", "{fasta}",
+            "{sample}.bam"),
+  output:
+    fwd = path.join(DATA, "bigwigs", "{species}", "bt2", "{fasta}", "{expt}", "{sample}_fwd.bw"),
+    rev = path.join(DATA, "bigwigs", "{species}", "bt2", "{fasta}", "{expt}", "{sample}_rev.bw"),
+  params:
+    strand_settings = _bedtools_strand_setting,
+    genome =  path.join(DBASES, "{species}",  "{fasta}.fa.fai"),
+  log:
+    path.join(DATA, "bigwigs", "logs", "{species}", "{fasta}", "{expt}", "{sample}.txt") 
+  message:
+    "building bigwigs for {wildcards.sample} "
+  threads: 6 
+  resources: 
+      all_threads=6,
+      mem_mb=MEM_ALLOC["DEFAULT"]    
+  shell:
+    """
+    samtools sort -@ 6 {input.bam} > {input.bam}.tmp
+    bedtools genomecov \
+            -bg \
+            -split \
+            -du \
+            -strand {params.strand_settings[0]} \
+            -ibam {input.bam}.tmp \
+            > {output.fwd}.tmp
+    
+    bedtools genomecov \
+            -bg \
+            -split \
+            -du \
+            -strand {params.strand_settings[1]} \
+            -ibam {input.bam}.tmp \
+            > {output.rev}.tmp
+    
+    # inplace sorting
+    bedSort {output.fwd}.tmp {output.fwd}.tmp
+    bedSort {output.rev}.tmp {output.rev}.tmp
+
+    
+
+    bedGraphToBigWig \
+      {output.fwd}.tmp {params.genome} {output.fwd}
+      
+    # handle potential empty files
+    if [ -s {output.rev}.tmp ]
+    then
+      bedGraphToBigWig {output.rev}.tmp {params.genome} {output.rev}
+    else
+      touch {output.rev}
+    fi
+   
+    
+    rm {output.fwd}.tmp {output.rev}.tmp {input.bam}.tmp
+    """
+
+rule bam_to_bigwig_cpm:
+  input:
+    bam = path.join(DATA, "star", "{species}", "{expt}", "{sample}",
+        "{sample}_sorted.bam"),
+    bai = path.join(DATA, "star", "{species}", "{expt}", "{sample}",
+        "{sample}_sorted.bam.bai"),
+  output:
+    fwd = path.join(DATA, "bigwigs", "{species}", "star", "{expt}", 
+    "{sample}_fwd.bw"),
+    rev = path.join(DATA, "bigwigs", "{species}", "star", "{expt}",
+    "{sample}_rev.bw"),
+  params:
+    strand_settings = _deeptools_strand_setting,
+  log:
+    path.join(DATA, "bigwigs", "logs", "{species}", "{expt}", "cpm", "{sample}.txt") 
+  message:
+    "building bigwigs for {wildcards.sample} "
+  threads: 12
+  resources: 
+      all_threads=12,
+      mem_mb=MEM_ALLOC["DEFAULT"]    
+  shell:
+    """
+    bamCoverage \
+    -b {input.bam} \
+    -o {output.fwd} \
+    --filterRNAstrand {params.strand_settings[0]} \
+    --normalizeUsing CPM \
+    -bs 1 \
+    -p {threads}
+
+    bamCoverage \
+    -b {input.bam} \
+    -o {output.rev} \
+    --filterRNAstrand {params.strand_settings[1]} \
+    --normalizeUsing CPM \
+    -bs 1 \
+    -p {threads}
+    """

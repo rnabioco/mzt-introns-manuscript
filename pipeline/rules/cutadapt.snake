@@ -1,0 +1,92 @@
+""" rules for trimming """ 
+
+def _trim_settings(wildcards):
+  """ lookup global dictionary LIB_MAP via sample
+      wildcard and return settings for cutadapt 
+      based on library type definition 
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     trim_settings = config[lib_attrs]["trim"]
+  else:
+     print("WARNING: no trimming settings found for library: {}".format(id),
+       file = sys.stderr)
+     trim_settings = ""
+
+  return trim_settings
+
+def _fq_types(wildcards):
+  """ lookup global dictionary LIB_MAP via sample
+      and lookup fastq suffixes
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     fq_types = config[lib_attrs]["fq"]
+     fq_names = [path.join(wildcards.data,
+                           "raw_data",
+                           wildcards.species, 
+                           wildcards.expt, 
+                           wildcards.sample + x) for x in fq_types]
+  else:
+     sys.exit("No trimming settings found for library: {}".format(id))
+
+  return fq_names
+
+rule cutadapt_single:
+  input:
+    _fq_types, 
+  output:
+    path.join("{data}", "fastq", "trimmed", "{species}", "{expt}",
+      "{sample}_trimmed.fastq.gz")
+  params:
+    settings = _trim_settings,
+  log:
+    path.join("{data}", "fastq", "trimmed", "logs", "{species}", "{expt}", "{sample}.txt") 
+  message:
+    " trimming illumina adapters" 
+  threads:
+    1
+  resources: 
+      all_threads=1,
+      mem_mb=MEM_ALLOC["DEFAULT"]
+  shell:
+    """
+    cutadapt \
+      -m 18 \
+      {params.settings} \
+      -o {output} \
+      {input[0]} 
+    """
+
+rule cutadapt_paired:
+  input:
+    _fq_types, 
+  output:
+    path.join("{data}", "fastq", "trimmed", "{species}", "{expt}",
+    "{sample}_R1_trimmed.fastq.gz"), 
+    path.join("{data}", "fastq", "trimmed", "{species}", "{expt}",
+    "{sample}_R2_trimmed.fastq.gz") 
+  params:
+    settings = _trim_settings,
+  log:
+    path.join("{data}", "fastq", "trimmed", "logs", "{species}", "{expt}", "{sample}.txt") 
+  message:
+    " trimming illumina adapters" 
+  threads:
+    1
+  resources: 
+      all_threads=1,
+      mem_mb=MEM_ALLOC["DEFAULT"]
+  shell:
+    """
+    cutadapt \
+      -m 18 \
+      {params.settings} \
+      -o {output[0]} \
+      -p {output[1]} \
+      {input[0]}  \
+      {input[1]}
+    """
+

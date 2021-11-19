@@ -1,0 +1,102 @@
+import os
+
+rule eisa_prep:
+    """ 
+    Generate intron/exon reference using eisaR
+    """
+    input:
+        gtf = lambda wildcards: TRANSCRIPTS[wildcards.species],
+        fa = lambda wildcards: GENOMES[wildcards.species], 
+    output:
+        os.path.join(DBASES, "{species}", "eisa.fa"),
+        os.path.join(DBASES, "{species}", "eisa", "eisaR.gtf"),
+    params:
+      outdir = os.path.join(DBASES, "{species}"),
+      r = os.path.join(RSRC, "eisa.R"),
+    log:
+      os.path.join(DBASES, "{species}", "eisa", "logs", "prep.txt")
+    message:
+      "generating eisa reference "
+    threads: 1
+    resources: 
+        all_threads=1,
+        mem_mb=MEM_ALLOC["DEFAULT"]
+    shell:
+        """
+      Rscript --vanilla {params.r} {input.gtf} {input.fa} {wildcards.species} {params.outdir}
+      """
+
+def _get_t0_libs(wildcards):
+    expts = [LIB_MAP[x] for x in T0_SAMPLES]
+
+    out = expand(path.join(DATA, 
+        "bigwigs",  
+        wildcards.species, 
+        "bt2", 
+        FASTA_TYPE,
+        "{expt}",
+        "{sample}_fwd.bw"), 
+        zip,
+        sample = T0_SAMPLES,
+        expt = expts)
+    return out
+
+rule eisa_mask:
+    """ 
+    Generate masked intron/exon reference using eisaR
+    """
+    input:
+      _get_t0_libs, 
+    output:
+      bed = os.path.join(DBASES, "{species}", "intron_mask",
+              "intron_mask_txcoords_{fasta}_bt2_align.bed"),
+    params:
+      eisadir = os.path.join(DBASES, "{species}", "eisa"),
+      outdir = os.path.join(DBASES, "{species}"),
+      r = os.path.join(RSRC, "mask_introns.R"),
+    log:
+      os.path.join(DBASES, "{species}", "{fasta}", "eisa", "logs", "mask.txt")
+    message:
+      "generating eisa reference with intron coverage masked "
+    threads: 8
+    resources: 
+        all_threads=8,
+        mem_mb=MEM_ALLOC["SALMON"]
+    shell:
+      """
+      Rscript --vanilla \
+              {params.r} \
+              {params.eisadir} \
+              {wildcards.species} \
+              {params.outdir} \
+              {threads} \
+              {input} 
+      """
+
+rule mask_fa:
+    """ 
+    Generate intron/exon reference using eisaR
+    """
+    input:
+      bed = os.path.join(DBASES, "{species}", "intron_mask",
+              "intron_mask_txcoords_{fasta}_bt2_align.bed"),
+    output:
+      fa = os.path.join(DBASES, "{species}", "{fasta}_masked.fa")
+    params:
+      eisadir = os.path.join(DBASES, "{species}", "eisa"),
+      outdir = os.path.join(DBASES, "{species}"),
+    log:
+      os.path.join(DBASES, "{species}", "{fasta}", "eisa", "logs", "mask_fasta.txt")
+    message:
+      "generating eisa reference with intron coverage masked "
+    threads: 1
+    resources: 
+        all_threads=1,
+        mem_mb=MEM_ALLOC["SALMON"]
+    shell:
+      """
+      bash {SRC}/mask_filter_fa.sh \
+              {params.outdir}/eisa.fa \
+              {input.bed} \
+              {params.outdir}/intron_mask/eisa_unique_transcripts.tsv
+      """

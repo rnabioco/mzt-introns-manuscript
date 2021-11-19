@@ -1,0 +1,133 @@
+""" calculate primary expression levels """ 
+
+def _btmap_settings(wildcards):
+  """ lookup global dictionary LIB_MAP via sample
+      wildcard and return settings for salmon 
+      based on experiment definition in config file 
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     map_settings = config[lib_attrs]["bt_map"]
+  else:
+     print("WARNING: no map settings found for library: {}".format(id),
+       file = sys.stderr)
+     map_settings = ""
+
+  return map_settings
+
+def _btinput_options(wildcards):
+  
+  fqs = _fq_types(wildcards)
+  if len(fqs) == 1:
+      io_option = " -U {fq[0]} ".format(fq = fqs)
+  elif len(fqs) > 1:
+      io_option = " -1 {fq[0]} -2 {fq[1]} ".format(fq = fqs)
+  else:
+      sys.exit("no fastq suffixes found for library: {}".format(id))
+  return io_option
+
+def _map_settings(wildcards):
+  """ lookup global dictionary LIB_MAP via sample
+      wildcard and return settings for salmon 
+      based on experiment definition in config file 
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     map_settings = config[lib_attrs]["map"]
+  else:
+     print("WARNING: no map settings found for library: {}".format(id),
+       file = sys.stderr)
+     map_settings = ""
+
+  return map_settings
+
+rule salmon_alignment_mode:
+    """
+    run salmon on bams
+    Salmon v0.9.1
+    """
+    input:
+      bam = path.join("{data}", "bt2", "{species}", "{expt}", "{fasta}", "{sample}.bam"),
+      fa = path.join(DBASES, "{species}", "{fasta}.fa")
+    output:
+      path.join("{data}", "salmon_bt2_masked", "{species}", "{expt}", "{fasta}", "{sample}", "quant.sf")
+    params:
+      settings = _map_settings,
+      idx = path.join(DBASES, "{species}", "salmon"),
+      out_dir = path.join("{data}", "salmon_bt2_masked", "{species}", "{expt}", "{fasta}", "{sample}"),
+    log:
+      path.join("{data}", "salmon_bt2_masked", "logs", "{species}", "{expt}", "{fasta}", "{sample}")
+    threads: 12
+    resources: 
+        all_threads=12,
+        mem_mb = MEM_ALLOC["SALMON"]
+    shell:
+      """
+      salmon quant \
+        -t {input.fa} \
+        {params.settings} \
+        -a {input.bam} \
+        -o {params.out_dir} \
+        -p {threads} \
+        --numBootstraps 50 
+      """
+
+rule bt:
+    """
+    run bowtie2 against transcriptome 
+    bowtie2 2.3.2
+    """
+    input:
+      idx = path.join(DBASES, "{species}", "bt2", "{fasta}.1.bt2"),
+      R1 = _fq_types,
+    output:
+      bam = path.join("{data}", "bt2", "{species}", "{expt}", "{fasta}", "{sample}.bam")
+    params:
+      io = _btinput_options,
+      settings = _btmap_settings,
+      idx = path.join(DBASES, "{species}", "bt2", "{fasta}"),
+    log:
+      path.join("{data}", "bt2", "logs", "{species}", "{expt}", "{fasta}", "{sample}")
+    threads: 12
+    resources: 
+        all_threads=12,
+        mem_mb = MEM_ALLOC["DEFAULT"]
+    shell:
+      """
+        bowtie2 \
+          -x {params.idx} \
+          --local \
+          --threads {threads} \
+          -k 250 \
+          {params.settings} \
+          {params.io} \
+          | samtools view -bS \
+          > {output.bam}  
+      """
+
+rule bt_idx:
+    """
+    build bowtie2 index 
+    bowtie2 2.3.2
+    """
+    input:
+      path.join(DBASES, "{species}", "{fasta}.fa")
+    output:
+      path.join(DBASES, "{species}", "bt2", "{fasta}.1.bt2")
+    params:
+      idx = path.join(DBASES, "{species}", "bt2", "{fasta}"),
+    log:
+      path.join(DBASES, "{species}", "bt2", "logs", "{fasta}_idx")
+    threads: 1
+    resources: 
+        all_threads=1,
+        mem_mb=MEM_ALLOC["DEFAULT"]
+    shell:
+      """
+      bowtie2-build \
+        {input} \
+        {params.idx} 
+      """
+

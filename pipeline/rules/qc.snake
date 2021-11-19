@@ -1,0 +1,50 @@
+""" rules for basic QC checks """ 
+
+raw = path.join("{data}", "raw_data")
+qc = path.join("{data}", "qc")
+
+def _fq_types(wildcards):
+  """ lookup global dictionary LIB_MAP via sample
+      and lookup fastq suffixes
+  """
+  id = os.path.basename(wildcards.sample)
+  if id in LIB_MAP:
+     lib_attrs = LIB_MAP[id]
+     fq_types = config[lib_attrs]["fq"]
+     fq_names = [path.join(wildcards.data,
+                           "raw_data",
+                           wildcards.species, 
+                           wildcards.expt, 
+                           wildcards.sample + x) for x in fq_types]
+  else:
+     sys.exit("no fastq suffixes found for library: {}".format(id))
+
+  return fq_names
+
+
+rule fastqc:
+  input:
+    _fq_types, 
+  output:
+    path.join(qc, "fastqc", "{species}", "{expt}", "{sample}_fastqc/summary.txt"),
+  params:
+    out_dir = path.join(qc, "fastqc", "{species}", "{expt}"),
+  log:
+    path.join(qc, "logs", "fastqc", "{species}", "{expt}", "{sample}.txt") 
+  message:
+    "fastqc analysis of {wildcards.sample} "
+  threads:
+    6 
+  resources: 
+    all_threads=6,
+    mem_mb=MEM_ALLOC["DEFAULT"]    
+  shell:
+    """
+    mkdir -p {params.out_dir}
+    fastqc \
+      -t {threads} \
+      -f fastq \
+      -o {params.out_dir} \
+      {input}
+    """
+
