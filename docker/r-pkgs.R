@@ -14,7 +14,7 @@ BiocManager::install(c("Biostrings",
                        "tximport", 
                        "Rsubread",
                        "biomaRt",
-                       "BiocParallel")
+                       "BiocParallel"),
                      suppressUpdates=TRUE, 
                      ask=FALSE, 
                      version = "3.15")
