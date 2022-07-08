@@ -1,0 +1,80 @@
+---
+title: "eisaR"
+author: "Kent Riemondy RBI"
+date: "5/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Generate reference
+
+```{r}
+library(eisaR)
+library(readr)
+library(dplyr)
+library(purrr)
+library(stringr)
+library(Biostrings)
+gtf <- "~/Projects/shared_dbases/annotation/drosophila/Drosophila_melanogaster.BDGP6.84.gtf"
+fa <- "~/Projects/shared_dbases/genomes/drosophila/Drosophila_melanogaster.BDGP6.dna.toplevel.fa"
+
+outdir <- file.path("annotation_files", "eisa")
+dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+
+grl <- getFeatureRanges(
+  gtf = gtf,
+  featureType = c("spliced", "intron"), 
+  intronType = "separate", 
+  flankLength = 40L, 
+  joinOverlappingIntrons = FALSE, 
+  verbose = TRUE
+)
+
+seqs <- GenomicFeatures::extractTranscriptSeqs(
+  x = Rsamtools::FaFile(fa), 
+  transcripts = grl
+)
+# trim polyAs 
+seqs_no_tails <- map(as.character(seqs), ~str_remove(.x, "A+$")) %>% unlist()
+
+seqs_no_tails <- tibble(
+  id = names(seqs_no_tails),
+  seq = seqs_no_tails
+)
+
+seqs_no_tails <- seqs_no_tails %>%
+  group_by(seq) %>%
+  mutate(representative = dplyr::first(id), 
+         is_duplicate = representative != id) %>% 
+  ungroup() %>% 
+  mutate(seq_len = nchar(seq))
+
+too_short <- filter(seqs_no_tails, seq_len < 25)
+seqs_no_tails_long <- filter(seqs_no_tails, seq_len > 25)
+
+duplicate_seqs <- filter(seqs_no_tails_long, is_duplicate) %>% 
+  dplyr::select(RetainedRef = representative,
+                DuplicateRef = id,
+                everything())
+
+polished_seqs <- filter(seqs_no_tails_long, !is_duplicate) 
+
+seq_strings <- polished_seqs$seq
+names(seq_strings) <- polished_seqs$id
+
+seq_strings <- DNAStringSet(seq_strings)
+
+exportToGtf(
+  grl, 
+  filepath = file.path(outdir, "eisaR.gtf"))
+
+
+df <- getTx2Gene(grl)
+write_tsv(df, file.path(outdir,"tx2gene.tsv"))
+Biostrings::writeXStringSet(seq_strings, file.path(outdir,'eisa.fa'))
+Rsamtools::indexFa(file.path(outdir,'eisa.fa'))
+write_tsv(duplicate_seqs, file.path(outdir,"duplicated_seqs.tsv"))
+```

@@ -1,0 +1,18 @@
+name: mzt-introns
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.9.13
+  - snakemake=7.8.2
+  - drmaa=0.7.9
+  - cutadapt=4.1
+  - star=2.7.10a
+  - samtools=1.15.1
+  - deeptools=3.5.1
+  - bedtools=2.30.0
+  - salmon=1.8.0
+  - fastqc=0.11.9
+  - bowtie2=2.2.5

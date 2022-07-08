@@ -1,0 +1,961 @@
+---
+title: "Example gene snapshots"
+author: "Kent Riemondy RBI"
+date: "7/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(kentr)
+source(here::here("R/globals.r"))
+eisa_dir <- file.path(project_dir, "dbases-rerun", "drosophila", "eisa")
+fig_dir <- "figs_ont"
+dir.create(fig_dir, recursive = TRUE)
+tbl_dir <- "processed_files"
+out_dir <- "output_files"
+dir.create(out_dir)
+
+mat_zyg_cols <- c(
+  "#F7941D",
+  "#0072BC"
+)
+```
+
+```{r}
+mdata <- read_tsv(file.path(data_dir,
+                             "raw_data",
+                             "drosophila",
+                             "RISSLAND",
+                             "GSE98106_run_info_geo.txt"))
+
+#simplify mdata
+mdata <- dplyr::select(mdata,
+                        Run_s, 
+                        developmental_stage_s,
+                        rip_antibody_s,
+                        source_name_s,
+                        strain_s)
+
+# select relevant libs
+mdata <- dplyr::filter(mdata,
+                        source_name_s == "Embryo",
+                        strain_s %in% c("w1118", "eGFP-ME31B"),
+                        rip_antibody_s == "none") %>% 
+  dplyr::select(-rip_antibody_s)
+
+
+#cleanup names
+mdata <- mdata %>% 
+  mutate(source_name_s = ifelse(source_name_s == "embryos", 
+                                "Embryo",
+                                source_name_s),
+         developmental_stage_s = str_replace(developmental_stage_s,
+                                             " h ",
+                                             " hr "))
+
+# cleanup colnames
+colnames(mdata) <- str_replace(colnames(mdata),
+                               "_s$",
+                               "")
+
+fa_type <- "eisa_masked"
+
+pdata <- mutate(mdata, 
+                mzt = ifelse(str_detect(developmental_stage,
+                                        "^[2345]-[3456] hr embryo"),
+                             "zygotic",
+                             "maternal"),
+                strain_id = str_replace(strain, "-", "_"))
+
+```
+
+
+```{r}
+plot_ont_tx <- function(ont_align, 
+                             transcripts,
+                             gtf_obj,
+                             scale_y = FALSE,
+                             gnome = "dm6",
+                             annotation_label = NULL,
+                        cols_to_use = NULL,
+                             ...){
+  library(GenomicFeatures)
+  library(Gviz)
+  library(GenomicAlignments)
+  
+  options(ucscChromosomeNames=FALSE)
+
+  #subset gtf to get min max coords to plot
+  gfeatures <- gtf_to_gviz(gtf_obj, transcripts)
+  
+  chrom <- as.vector(unique(gfeatures$chromosome))[1]
+  start <- min(gfeatures$start)
+  end <- max(gfeatures$end)
+  strand <- as.vector(unique(gfeatures$strand))[1]
+  
+  # get coverage
+  # cov_list <- split(ont_align, ont_align$sample) %>% 
+  #   map(~group_by(.x, rname) %>% 
+  #         summarize(n = n()) %>% 
+  #         inner_join(gfeatures, ., by  = c("transcript" = "rname")) %>% 
+  #         mutate(transcript = str_c(transcript, " (", n, ")")))
+  ont_align <- mutate(ont_align, rname = factor(rname))
+  cov_list <- split(ont_align, ont_align$sample) %>% 
+    map(~group_by(.x, rname, .drop =FALSE) %>% 
+          summarize(n = n())) %>% 
+    map(~{res <- .x$n; names(res) <- .x$rname; res}) 
+  
+  grange_feat <- gtf_obj[gtf_obj$transcript_id %in% transcripts]
+  
+  if(is.null(cols_to_use)){
+    cols_to_use <- viridis(length(cov_list), direction = 1)
+  } else {
+    cols_to_use <- cols_to_use[1:length(cov_list)]
+  }
+  
+  dtracks <- pmap(list(cov_list,
+                       names(cov_list),
+                       cols_to_use),
+                  function(x, y, z){
+                    feats <- grange_feat
+                    feats$transcript_id <- str_c(grange_feat$transcript_id,
+                                                 " (", 
+                                                 x[grange_feat$transcript_id],
+                                                 ")")
+
+                    GeneRegionTrack(makeTxDbFromGRanges(feats), 
+                              name =  as.character(y),
+                              showID = TRUE,
+                              col = 'black', fill = z,
+                              transcriptAnnotation = "transcript"
+                    )})
+  
+  # grtrack <- GeneRegionTrack(gfeatures,
+  #                            genome = gnome, 
+  #                            chromosome=chrom, 
+  #                            name="",
+  #                         #   stacking = "dense",
+  #                            col.title = "black",
+  #                         showId = TRUE,
+  #                         transcriptAnnotation = "transcript")
+  options(scipen=16)
+  if(is.null(annotation_label)){
+    annotation_label <- unique(gfeatures$symbol)[1]
+  }
+  plotTracks(dtracks,
+             # chromosome = chrom,
+             # from = start,
+             # to = end,
+             reverseStrand = strand == "-", 
+             col.title = "black",
+             col.axis = "black",
+             background.title ="transparent",
+          #   lwd = .5, 
+             innerMargin = 10,
+             margin = 50,
+             main = annotation_label,
+             ...)
+
+}
+```
+
+
+
+```{r}
+switch_isos <- read_excel(file.path("output_files",
+                                    "isoform_summary.xlsx"),
+           sheet = 2) 
+
+
+ont_align_summary <- read_tsv(file.path("output_files",
+                                        "all_merged_read_alignments.tsv"))
+  
+
+gtf_obj <- import(annots$drosophila$gtf)
+
+to_plot <- c(
+  "PNUTS",
+  "RhoGEF3",
+  "toc",
+  "numb",
+  "Miro",
+  "Zn72D",
+  "Cdk2",
+  "bl",
+  "pUf68",
+  "E2f1"
+)
+
+walk(to_plot[10], 
+    ~{
+      features <- switch_isos %>% filter(gene_name == .x) %>% pull(transcript_id)
+      ont_align <- filter(ont_align_summary, rname %in% features)
+      
+      pdf(file.path("../figures/pdfs/tx-nano-plots/", str_c(.x, "_coverage.pdf")),
+          width = 12,
+          height = 4)
+      plot_ont_tx(ont_align, features, gtf_obj, cols_to_use = scbp::palette_OkabeIto,
+                 title.width = 1.5,
+                 #sizes = c(0.1, rep(0.25, 5)),
+                 fontsize = 12,
+                 cex.title = 1)
+      dev.off()
+    })
+```
+
+
+
+## nanopore individual reads
+
+```{r}
+plot_tx_nano_coverage <- function(rnafns, 
+                                  nanofns,
+                             transcripts,
+                             gtf_obj,
+                             ont_txalign_info,
+                             scale_y = FALSE,
+                             gnome = "dm6",
+                             annotation_label = NULL,
+                             filter_full_length = TRUE,
+                             min_cov = 0.80,
+                             cols_to_use = NULL,
+                             ...){
+  library(GenomicFeatures)
+  library(Gviz)
+  library(GenomicAlignments)
+  library(GenomicRanges)
+  
+  options(ucscChromosomeNames=FALSE)
+
+  #subset gtf to get min max coords to plot
+  gfeatures <- gtf_to_gviz(gtf_obj, transcripts)
+  
+  chrom <- as.vector(unique(gfeatures$chromosome))[1]
+  start <- min(gfeatures$start)
+  end <- max(gfeatures$end)
+  strand <- as.vector(unique(gfeatures$strand))[1]
+  
+  # # get rna coverage
+  # rna_cov_list <- map(rnafns, 
+  #     ~get_bw(.x,
+  #            chrom = chrom,
+  #            start = start,
+  #            end = end) %>% 
+  #       makeGRangesFromDataFrame(., 
+  #                                keep.extra.columns = TRUE,
+  #                                seqnames.field = 'contig',
+  #                                starts.in.df.are.0based = TRUE,
+  #                                ignore.strand = TRUE))
+  # 
+  # if(scale_y){
+  #   ymax <- map(rna_cov_list, ~.x$coverage) %>% unlist() %>% max()
+  #   y_limits <- c(0, ymax)
+  # } else {
+  #   y_limits <- NULL
+  # }
+  # 
+  # rna_lib_names <- names(rnafns)
+  # 
+  # if(is.null(rna_lib_names)){
+  #   rna_lib_names <- as.character(1:length(rnafns))
+  # } 
+  # names(rna_cov_list) <- rna_lib_names 
+  # 
+  # rnatracks <- pmap(list(rna_cov_list,
+  #                      names(rna_cov_list),
+  #                      viridis(length(rna_cov_list))),
+  #                 function(x, y, z){
+  #                   DataTrack(range = x, 
+  #                             name =  as.character(y),
+  #                             chromosome = chrom, 
+  #                             genome = gnome,
+  #                             col.histogram = z,
+  #                             fill.histogram = z,
+  #                             ylim = y_limits
+  #                  )})
+  
+   # get nano coverage
+  read_tx_map <- ont_txalign_info$rname
+  names(read_tx_map) <- ont_txalign_info$qname
+  nano_cov_list <- map(nanofns, 
+                       ~{
+                         res <- subsetByOverlaps(.x, 
+                                                 GRanges(chrom, IRanges(start, end)))
+                         res <- res[res$type == "exon", ]
+                         res$read_group <- read_tx_map[res$transcript_id]
+                         res <- res[!is.na(res$read_group), ]
+                         res
+                       })
+  
+  if(filter_full_length){
+    full_reads <- filter(ont_txalign_info, tx_coverage > min_cov) %>% pull(qname)
+    nano_cov_list <- map(nano_cov_list, ~.x[.x$transcript_id %in% full_reads, ])
+  }
+  
+  nano_lib_names <- names(nanofns)
+  if(is.null(nano_lib_names)){
+    nano_lib_names <- as.character(1:length(nanofns))
+  } 
+  names(nano_cov_list) <- nano_lib_names 
+  
+  if(is.null(cols_to_use)){
+    cols_to_use <- viridis(length(nanofns), direction = 1)
+  } else {
+    cols_to_use <- cols_to_use[1:length(nanofns)]
+  }
+  nanotracks <- pmap(list(nano_cov_list,
+                       names(nano_cov_list),
+                       cols_to_use),
+                  function(x, y, z){
+                    res <- AnnotationTrack(range = x, 
+                              name =  as.character(y),
+                              chromosome = chrom, 
+                              genome = gnome,
+                              group = x$transcript_id,
+                              shape = "box", 
+                              stacking = 'squish',
+                              fill = z)
+                  # #  feature(res) <- x$read_group
+                  #   feature(res) <- c("foo", "bar")[as.integer(factor(x$read_group, levels = transcripts))]
+                    res
+                    })
+  grange_feat <- gtf_obj[gtf_obj$transcript_id %in% transcripts]
+    
+  grtrack <- GeneRegionTrack(makeTxDbFromGRanges(grange_feat),
+                             genome = gnome, 
+                             chromosome=chrom, 
+                             name="",
+                             showId = TRUE,
+                             just.group= "above",
+                             geneSymbol = FALSE,
+                             symbol = gfeatures$transcript,
+                          #   stacking = "dense",
+                             col.title = "black")
+  options(scipen=16)
+  if(is.null(annotation_label)){
+    annotation_label <- unique(gfeatures$symbol)[1]
+  }
+  plotTracks(c(grtrack, 
+               nanotracks),
+             chromosome = chrom,
+             from = start,
+             to = end,
+             reverseStrand = strand == "-", 
+             col.title = "black",
+             col.axis = "black",
+             background.title ="transparent",
+          #   lwd = .5, 
+             main = annotation_label,
+             ...)
+
+}
+```
+
+
+
+```{r}
+#bb_fns <- dir(here("data/ont-genome-ensembl/bed"), pattern = ".bb", full.names = TRUE)
+
+features <- switch_isos %>% filter(gene_name == "PNUTS") %>% pull(transcript_id)
+ 
+gtf_01 <- import('/Users/kriemo/Projects/mzt-introns/data/ont-genome-ensembl/bed/0-1_hr_rerun.gtf')
+
+gtf_45 <- import('/Users/kriemo/Projects/mzt-introns/data/ont-genome-ensembl/bed/4-5_hr_rerun.gtf')
+                 
+gtfs <- list(`0-1 hour` = gtf_01, 
+             `4-5 hour` = gtf_45)
+
+ont_align_summary <- read_tsv("../2021-05-23/all_merged_read_alignments.tsv")
+```
+  
+```{r}
+to_plot <- c(
+  "PNUTS",
+  "RhoGEF3",
+  "toc",
+  "numb",
+  "Miro",
+  "Zn72D",
+  "bl",
+  "Cdk2",
+  "E2f1"
+)
+
+nano_tx_outdir <- "../figures/pdfs/nano-read-align/"
+dir.create(nano_tx_outdir, showWarnings = FALSE)
+walk(to_plot,
+    ~{
+      features <- switch_isos %>%
+        filter(gene_name == .x) %>% 
+        arrange(transcript_type) %>% 
+        pull(transcript_id) 
+      pdf(file.path(nano_tx_outdir, str_c(.x, "_coverage.pdf")), height = 4, width = 12)
+      plot_tx_nano_coverage(rnafns, 
+                            gtfs, 
+                            features, 
+                            gtf_obj, 
+                            ont_align_summary, 
+                            cols_to_use = viridis(2),
+                            filter_full_length = T, 
+                             min_cov = 0.75, 
+                            sizes = c(1, 2, 2), 
+                            margin = 20, 
+                            innerMargin = 10, frame=TRUE, min.height=1
+                            )
+  dev.off()
+  
+  p <- ont_align_summary %>% 
+    filter(rname %in% features) %>%
+    mutate(rname = factor(rname, levels = features)) %>% 
+    ggplot(aes(sample)) + 
+      geom_bar(aes(fill = rname)) +
+      scale_fill_manual(values = mat_zyg_cols) +
+      labs(x = "",
+           y = "# of reads",
+           fill = "")
+  save_plot(file.path(nano_tx_outdir, str_c(.x, "_read_counts.pdf")),
+            p,
+            base_asp = 1)
+})
+
+```
+
+
+```{r}
+plot_tx_nano_aln_coverage <- function(nanofns,
+                             transcripts,
+                             gtf_obj,
+                             scale_y = FALSE,
+                             gnome = "dm6",
+                             annotation_label = NULL,
+                             read_heights = c(1, 5),
+                             cols_to_use = NULL,
+                             ...){
+  library(GenomicFeatures)
+  library(Gviz)
+  library(GenomicAlignments)
+  library(GenomicRanges)
+  
+  options(ucscChromosomeNames=TRUE)
+
+  #subset gtf to get min max coords to plot
+  gfeatures <- gtf_to_gviz(gtf_obj, transcripts) %>% 
+    mutate(chromosome = str_c("chr", chromosome))
+  
+  chrom <- as.vector(unique(gfeatures$chromosome))[1]
+  start <- min(gfeatures$start)
+  end <- max(gfeatures$end)
+  strand <- as.vector(unique(gfeatures$strand))[1]
+  
+
+  if(is.null(names(nanofns))){
+    nano_lib_names <- as.character(1:length(nanofns))
+  } 
+  names(nanofns) <- nano_lib_names 
+  if(is.null(cols_to_use)){
+    cols_to_use <- viridis(length(nanofns), direction = 1))
+  }
+  nanotracks <- pmap(list(nanofns,
+                       names(nanofns),
+                       cols_to_use,
+                  function(x, y, z){
+                    AlignmentsTrack(range = x, 
+                              name =  as.character(y),
+                              chromosome = chrom, 
+                              start = start,
+                              end = end,
+                              genome = gnome,
+                              type = "pileup",
+                              shape = "box", 
+                              stacking = 'squish',
+                              isPaired = FALSE,
+                              fill = z,
+                              min.height = read_heights[1],
+                              max.height = read_heights[2]
+                    )})
+  
+  grtrack <- GeneRegionTrack(gfeatures,
+                             genome = gnome, 
+                             chromosome=chrom, 
+                             name="",
+                          #   stacking = "dense",
+                             col.title = "black")
+  options(scipen=16)
+  if(is.null(annotation_label)){
+    annotation_label <- unique(gfeatures$symbol)[1]
+  }
+  plotTracks(c(grtrack, 
+               nanotracks),
+             chromosome = chrom,
+             from = start,
+             to = end,
+             reverseStrand = strand == "-", 
+             col.title = "black",
+             col.axis = "black",
+             background.title ="transparent",
+          #   lwd = .5, 
+             innerMargin = 10,
+             margin = 50,
+             main = annotation_label,
+             ...)
+
+}
+```
+
+```{r}
+bam_fns <- dir(here("data/ont-genome/sorted_alignments"), pattern = ".bam$", full.names = TRUE)
+
+
+pdf("Test.pdf", height = 5);plot_tx_nano_aln_coverage(bam_fns[c(1,3)], features, gtf_obj, read_heights = c(3, 5)); dev.off()
+```
+
+## bulk-rna-seq plots 
+
+```{r, eval = TRUE}
+additional_annots <- read_tsv(file.path(out_dir, "all_isoform_annotations.tsv"))
+base_dir <- "~/Projects/mzt-introns/data-rerun/bigwigs/drosophila/star/RISSLAND"
+sras <- filter(mdata, strain == "w1118") %>% pull(Run)
+ids <- filter(mdata, strain == "w1118") %>% pull(developmental_stage)
+
+bws <- c("_fwd.bw", "_rev.bw")
+names(bws) <- c("+", "-")
+
+bw_fns <- map(bws, function(x) {
+  out <- file.path(base_dir, paste0(sras, x))
+  names(out) <- ids
+  out
+}) 
+
+
+gtf_obj <- import(annots$drosophila$gtf)
+
+tx_summary_plots <- function(bws, 
+                             gene,
+                             isoform_annotation_df,
+                             ...){
+  
+  to_plot <- filter(isoform_annotation_df, gene_name == gene) %>% 
+    arrange(tx_class)
+  strand <- unique(to_plot$strand)[1]
+
+  features <- unique(to_plot$featureID)
+  plot_tx_coverage(bw_fns[[strand]], 
+                 features,
+                 gtf_obj,
+                 scale_y = FALSE,
+                 cex.main = 0.75,
+                 rotation.title=0,
+                 ...
+                 )
+}
+
+genes_to_plot <- c(
+  "PNUTS",
+  "cnn",
+  "Zn72D",
+  "numb",
+  "lig",
+  "Psa",
+  "Rb97D",
+  "pyd",
+  "CG8331",
+  "Pk92B",
+  "yata",
+  "hts",
+  "bl",
+  "eIF-2gamma",
+  "Npc1a",
+  "Su(var)2-10",
+  "toc",
+  "Hph",
+  "blot",
+  "Mhcl",
+  "SC35",
+  "CG4658",
+  "arm",
+  "Nmnat",
+  "Adar",
+  "Plip",
+  "Cdk2",
+  "CycE")
+
+tx_figs <- file.path(fig_dir, "tx_figs")
+dir.create(tx_figs, showWarnings = FALSE)
+
+walk(genes_to_plot,
+    ~{
+      pdf(file.path(tx_figs,
+                    str_c(.x, "_tx_coverage.pdf")),
+          width = 6,
+          height = 3)
+      if (!.x %in% additional_annots$gene_name){
+        message(.x, " not switching iso")
+        return(NULL)
+      }
+      tx_summary_plots(bw_fns, gene = .x, 
+                 isoform_annotation_df = additional_annots,
+                 title.width = 1.5,
+                 sizes = c(0.1, rep(0.25, 5)),
+                 fontsize = 8,
+                 cex.title = 1)
+      dev.off()
+    })
+
+tx_figs <- "../figures/pdfs/tx-coverage-plots/"
+dir.create(tx_figs, showWarnings = FALSE)
+
+walk(genes_to_plot,
+    ~{
+      pdf(file.path(tx_figs,
+                    str_c(.x, "_tx_coverage.pdf")),
+          width = 6,
+          height = 3)
+      if (!.x %in% additional_annots$gene_name){
+        message(.x, " not switching iso")
+        return(NULL)
+      }
+      tx_summary_plots(bw_fns, gene = .x, 
+                 isoform_annotation_df = additional_annots,
+                 title.width = 1.5,
+                 sizes = c(0.1, rep(0.25, 5)),
+                 fontsize = 8,
+                 cex.title = 1)
+      dev.off()
+    })
+
+```
+
+
+Include ribosome profiling and nanopore
+
+```{r}
+plot_tx_ribo_coverage <- function(rnafns, 
+                                  ribofns,
+                             transcripts,
+                             gtf_obj,
+                             scale_y = FALSE,
+                             gnome = "dm6",
+                             annotation_label = NULL,
+                             ...){
+  library(GenomicFeatures)
+  library(Gviz)
+  library(GenomicAlignments)
+  
+  options(ucscChromosomeNames=FALSE)
+
+  #subset gtf to get min max coords to plot
+  gfeatures <- gtf_to_gviz(gtf_obj, transcripts)
+  
+  chrom <- as.vector(unique(gfeatures$chromosome))[1]
+  start <- min(gfeatures$start)
+  end <- max(gfeatures$end)
+  strand <- as.vector(unique(gfeatures$strand))[1]
+  
+  # get rna coverage
+  rna_cov_list <- map(rnafns, 
+      ~get_bw(.x,
+             chrom = chrom,
+             start = start,
+             end = end) %>% 
+        makeGRangesFromDataFrame(., 
+                                 keep.extra.columns = TRUE,
+                                 seqnames.field = 'contig',
+                                 starts.in.df.are.0based = TRUE,
+                                 ignore.strand = TRUE))
+  
+  if(scale_y){
+    ymax <- map(rna_cov_list, ~.x$coverage) %>% unlist() %>% max()
+    y_limits <- c(0, ymax)
+  } else {
+    y_limits <- NULL
+  }
+  
+  rna_lib_names <- names(rnafns)
+  
+  if(is.null(rna_lib_names)){
+    rna_lib_names <- as.character(1:length(rnafns))
+  } 
+  names(rna_cov_list) <- rna_lib_names 
+  
+  rnatracks <- pmap(list(rna_cov_list,
+                       names(rna_cov_list),
+                       viridis(length(rna_cov_list))),
+                  function(x, y, z){
+                    DataTrack(range = x, 
+                              name =  as.character(y),
+                              chromosome = chrom, 
+                              genome = gnome,
+                              col.histogram = z,
+                              fill.histogram = z,
+                              ylim = y_limits
+                    )})
+  
+   # get ribo coverage
+  ribo_cov_list <- map(ribofns, 
+      ~get_bw(.x,
+             chrom = chrom,
+             start = start,
+             end = end) %>% 
+        makeGRangesFromDataFrame(., 
+                                 keep.extra.columns = TRUE,
+                                 seqnames.field = 'contig',
+                                 starts.in.df.are.0based = TRUE,
+                                 ignore.strand = TRUE))
+  
+  if(scale_y){
+    ymax <- map(ribo_cov_list, ~.x$coverage) %>% unlist() %>% max()
+    y_limits <- c(0, ymax)
+  } else {
+    y_limits <- NULL
+  }
+  
+  ribo_lib_names <- names(ribofns)
+  
+  if(is.null(ribo_lib_names)){
+    ribo_lib_names <- as.character(1:length(ribofns))
+  } 
+  names(ribo_cov_list) <- ribo_lib_names 
+  
+  ribotracks <- pmap(list(ribo_cov_list,
+                       names(ribo_cov_list),
+                       magma(length(ribo_cov_list), direction = 1)),
+                  function(x, y, z){
+                    DataTrack(range = x, 
+                              name =  as.character(y),
+                              chromosome = chrom, 
+                              genome = gnome,
+                              col.histogram = z,
+                              fill.histogram = z,
+                              ylim = y_limits
+                    )})
+  grange_feat <- gtf_obj[gtf_obj$transcript_id %in% transcripts]
+  txDb_feats <- suppressWarnings(makeTxDbFromGRanges(grange_feat))
+  
+  grtrack <- GeneRegionTrack(txDb_feats,
+                             genome = gnome, 
+                             chromosome=chrom, 
+                             name="",
+                             col.title = "black",
+                          lwd=0.5)
+  options(scipen=16)
+  if(is.null(annotation_label)){
+    annotation_label <- unique(gfeatures$symbol)[1]
+  }
+  plotTracks(c(grtrack, 
+               rnatracks,
+               ribotracks),
+             chromosome = chrom,
+             from = start,
+             to = end,
+             type = "hist",
+             reverseStrand = strand == "-", 
+             col.title = "black",
+             col.axis = "black",
+             background.title ="transparent",
+          #   lwd = .5, 
+             innerMargin = 10,
+             margin = 50,
+             main = annotation_label,
+             ...)
+
+}
+```
+
+```{r}
+bw_dir <- "~/Projects/mzt-introns/data/bigwigs"
+ribo_bw_fns <- dir(file.path(bw_dir, "drosophila", "EICHHORN"), 
+              pattern = "fwd.bw", 
+              full.names = TRUE)
+rpf_mdata <- read_tsv("~/Projects/mzt-introns/data/raw_data/drosophila/EICHHORN/PRJNA326506.txt")
+rpf_mdata <- filter(rpf_mdata, str_detect(sample_title,
+                                      "_wt_") & str_detect(sample_title, "RPF")) %>% 
+  mutate(sample_title = str_split(sample_title, "_wt_") %>% map_chr(1))
+to_keep <- c(
+  "Stage_11",
+ # "Stage_14",
+  "Activated_egg",
+  "0-1_h",
+  "2-3_h",
+  "3-4_h",
+  "5-6_h")
+rpf_mdata <- filter(rpf_mdata, sample_title %in% to_keep) %>% 
+  mutate(sample_title = factor(sample_title, levels = to_keep)) %>% 
+  arrange(sample_title)
+srr_ids <- basename(ribo_bw_fns) %>% 
+  str_split(., "_", simplify = TRUE) %>%
+  .[, 1]
+ribo_bw_fns <- ribo_bw_fns[srr_ids %in% rpf_mdata$run_accession]
+
+ribo_bw_fns_fwd <- file.path(bw_dir,  "drosophila", "EICHHORN",
+                 paste0(rpf_mdata$run_accession, "_fwd.bw"))
+names(ribo_bw_fns_fwd) <- rpf_mdata$sample_title
+ribo_bw_fns_rev <- file.path(bw_dir, "drosophila", "EICHHORN",
+                 paste0(rpf_mdata$run_accession, "_rev.bw"))
+names(ribo_bw_fns_rev) <- rpf_mdata$sample_title
+
+ribo_bw_fns <- list("+" = ribo_bw_fns_fwd,
+     "-" = ribo_bw_fns_rev)
+```
+
+```{r}
+gtf_obj <- import(annots$drosophila$gtf)
+```
+
+
+```{r}
+ribo_tx_summary_plots <- function(rnabws, 
+                             ribobws,
+                             gene,
+                             isoform_annotation_df,
+                             ...){
+  
+  to_plot <- filter(isoform_annotation_df, gene_name == gene)
+  strand <- unique(to_plot$strand)[1]
+
+  features <- unique(to_plot$featureID)
+  plot_tx_ribo_coverage(rnabws[[strand]], 
+                        ribobws[[strand]],
+                 features,
+                 gtf_obj,
+                 scale_y = FALSE,
+                 cex.main = 0.75,
+                 rotation.title=0,
+                 ...
+                 )
+}
+
+genes_to_plot <- c(
+  "PNUTS",
+  "toc",
+  "CG2201",
+  "Mhcl",
+  "cnn",
+  "numb",
+  "hts",
+  "RhoGEF3",
+  "CycE",
+  "Siz")
+
+tx_figs <- file.path(fig_dir, "tx_ribo_figs")
+dir.create(tx_figs, showWarnings = FALSE)
+
+walk(genes_to_plot,
+    ~{
+      pdf(file.path(tx_figs,
+                    str_c(.x, "_tx_ribo_coverage.pdf")),
+          width = 6,
+          height = 4.5)
+      if (!.x %in% additional_annots$gene_name){
+        message(.x, " not switching iso")
+        return(NULL)
+      }
+      ribo_tx_summary_plots(bw_fns, 
+                       ribo_bw_fns, gene = .x, 
+                 isoform_annotation_df = additional_annots,
+                 title.width = 1.5,
+                 sizes = c(0.1, rep(0.25, length(bw_fns[[1]]) + length(ribo_bw_fns[[1]]))),
+                 fontsize = 8,
+                 cex.title = 1)
+      dev.off()
+    })
+
+
+tx_figs <- "../figures/pdfs/tx-ribo-coverage-plots//"
+dir.create(tx_figs, showWarnings = FALSE)
+
+walk(genes_to_plot,
+    ~{
+      pdf(file.path(tx_figs,
+                    str_c(.x, "_tx_ribo_coverage.pdf")),
+          width = 6,
+          height = 4.5)
+      if (!.x %in% additional_annots$gene_name){
+        message(.x, " not switching iso")
+        return(NULL)
+      }
+      ribo_tx_summary_plots(bw_fns, 
+                       ribo_bw_fns, gene = .x, 
+                 isoform_annotation_df = additional_annots,
+                 title.width = 1.5,
+                 sizes = c(0.1, rep(0.25, length(bw_fns[[1]]) + length(ribo_bw_fns[[1]]))),
+                 fontsize = 8,
+                 cex.title = 1)
+      dev.off()
+    })
+```
+
+
+```{r}
+# unable to get rtracklayer::import.bb to import proper ranges so just calling
+# system directly
+read_bb <- function(bb_fn, 
+                    region = NULL,
+                    strand_to_keep = NULL,
+                    bin = "/Users/kriemo/bin/kent/bigBedToBed"){
+  
+  bb_coltypes <- list(
+    chrom = readr::col_character(),
+    start = readr::col_integer(),
+    end = readr::col_integer(),
+    name = readr::col_character(),
+    score = readr::col_character(),
+    strand = readr::col_character(),
+    cds_start = readr::col_integer(),
+    cds_end = readr::col_integer(),
+    item_rgb = readr::col_character(),
+    exon_count = readr::col_integer(),
+    exon_sizes = readr::col_character(),
+    exon_starts = readr::col_character()
+  )
+  bb_colnames <- names(bb_coltypes)
+  
+  bb2bed <- Sys.which(bin)
+  if(bb2bed == "") {
+    stop("couldn't find bigBedToBed")
+  }
+  
+  if(is.null(region)){
+     res <- system2(bb2bed, 
+          c(bb_fn, 
+            "stdout"),
+          stdout = TRUE) 
+  } else {
+    
+    region[2] <- format(as.numeric(region[2]), 
+                         scientific = FALSE)
+    region[3] <- format(as.numeric(region[3]), 
+                         scientific = FALSE)
+        
+    res <- system2(bb2bed, 
+          c(bb_fn, 
+            paste0("-chrom=", region[1]),
+            paste0("-start=", region[2]),
+            paste0("-end=", region[3]),
+            "stdout"),
+          stdout = TRUE) 
+  } 
+  
+  if(length(res) == 0){
+    res <- tibble()
+  } else if (length(res) == 1){
+    res <- read_tsv(I(res, "\n"), 
+                    col_names = bb_colnames, 
+                    col_types = bb_coltypes)
+  } else {
+    res <- read_tsv(I(res), 
+                    col_names = bb_colnames, 
+                    col_types = bb_coltypes)
+  }
+  
+  if(!is.null(strand)){
+    res <- filter(res, strand == strand_to_keep)
+  }
+  res
+}
+
+```

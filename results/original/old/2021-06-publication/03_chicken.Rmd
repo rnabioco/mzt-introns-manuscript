@@ -1,0 +1,329 @@
+---
+title: "Chicken MZT analysis"
+author: "Kent Riemondy RBI"
+date: '`r Sys.Date()`'
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message = FALSE, warning = FALSE, include = FALSE}
+source(here::here("R/globals.r"))
+data_dir <- here("data-rerun")
+fig_dir <- "figs"
+species <- "chicken"
+dir.create(fig_dir, showWarnings = FALSE)
+```
+
+
+## Approach
+
+A paper describing a very high resolution time course of zebrafish was published in eLife [A high-resolution mRNA expression time course of embryonic development in zebrafish](https://elifesciences.org/articles/30860). This dataset will likely provide additional proof of principle data for the intronic analysis performed with drosophila datasets. 
+
+RNA-Seq data (paired-end) from 8 stages surrounding the MZT (or ZGA in zebrafish literature) was downloaded with 5 replicates per time point. The data was processed through salmon similarly to the drosophila data. In contrast to Olivia's drosphila data, these data are poly(A) purified mRNA-Seq libraries, so the intronic signal may be more subtle.  
+
+ 
+## get metadata
+
+```{r get_metadata}
+mdata <- read_tsv(file.path(data_dir, "raw_data",
+                             "chicken", 
+                             "HWANG", "PRJNA342320_download_log.txt"))
+
+mdata$study <- 'HWANG'
+
+#cleanup sample names
+mdata <- mdata %>% 
+  separate(sample_title, c("stage", "replicate"), sep = "_") %>% 
+  select(-fastq_aspera, -fastq_ftp)
+
+mdata
+```
+
+```{r }
+gtf <- tidy_gtf(annots[[species]]$gtf)
+
+gene2tx <- gtf %>%
+   filter(type == "exon") %>%
+   select(gene_id, transcript_id) %>%
+   na.omit() %>%
+   unique()
+
+gene2intron <- read_tsv(here("dbases-rerun", species, "eisa", "tx2gene.tsv"))
+```
+
+## Load in featurecounts data
+
+```{r load_dat, message = F}
+count_data_dir <- file.path(data_dir, 
+                            "featurecounts",
+                            "chicken")
+count_files <- dir(count_data_dir,
+                   pattern = "_counts.tsv$",
+                   recursive = T,
+                   full.names = T)
+
+sample_names <- str_split(count_files, "\\/") %>% 
+  map_chr(., ~.x[10]) %>% 
+  str_remove("_counts.tsv") 
+
+sample_names_simple <- str_replace(sample_names, "_exon|_intron", "")
+ 
+dat <- map(count_files, 
+           ~read_tsv(.x,
+                     skip = 2,  
+                     col_names = F) %>% 
+             select(gene_id = X1, 
+                    length = X6, 
+                    counts = X7))
+             
+names(dat) <- sample_names
+
+dat <- bind_rows(dat, .id = "sample_name")
+
+dat <- mutate(
+  dat,
+  run_accession = str_replace(sample_name,
+                    "_exon|_intron",
+                    ""),
+  count_type = ifelse(str_detect(sample_name, "exon"),
+                      "exon",
+                      "intron")
+)
+
+#join with main data
+dat <- inner_join(dat, 
+                  mdata,
+                  by = c("run_accession"))
+```
+
+### transcript to gene mapping
+
+```{r drop_monoexonic}
+gtf <- import(annots[[species]]$gtf)
+gtf <- as.data.frame(gtf)
+gtf$seqnames <- as.character(gtf$seqnames)
+
+gtf_summary <- dplyr::filter(gtf, type == "exon") %>% 
+  dplyr::select(seqnames, start, end, strand, gene_id) %>% 
+  dplyr::rename(chrom = seqnames) %>% 
+  unique() %>% 
+  group_by(gene_id) %>% 
+  bed_merge() %>% 
+  dplyr::summarize(total_exons = n())
+
+monoexonic_genes <- dplyr::filter(gtf_summary, total_exons == 1) %>%
+  pull(gene_id)
+```
+
+
+```{r remove_monoexonic}
+dat <- anti_join(dat, 
+                 tibble(gene_id = monoexonic_genes),
+                 by = "gene_id")
+
+dat <- group_by(dat, run_accession) %>% 
+  mutate(lib_size = sum(counts),
+         eff_length = as.numeric(length) - 150 + 1) %>% 
+  filter(eff_length > 0 ) %>% 
+  mutate(rate = log(counts) - log(eff_length),
+         total_rates = log(sum(exp(rate))),
+         tpm = exp(rate - total_rates + log(1e6)))
+```
+
+### plot pre_mRNA ratio
+
+```{r, calc_premRNA}
+# sum primary and mature TPMs for each gene across replicates
+summary_dat <- dplyr::select(dat, tpm, gene_id, 
+              run_accession, count_type, stage,
+              study, replicate) %>% 
+  group_by(gene_id, run_accession, 
+           stage, count_type) %>% 
+  dplyr::summarize(total_tpm = sum(tpm, na.rm = F)) %>% 
+  ungroup() 
+
+## calc primary ratio
+tpm_summary <- ungroup(dat) %>% 
+  dplyr::select(tpm, gene_id, 
+              count_type, stage,
+              study, replicate) %>% 
+  spread(count_type, tpm, fill = 0L) %>% 
+  mutate(primary_ratio  = intron / (intron + exon))
+
+
+## calc mean primary ratio
+tpm_means <- tpm_summary %>% 
+  group_by(gene_id, 
+           stage) %>% 
+  summarize(mean_primary = mean(primary_ratio,
+                                na.rm = T)) 
+
+tpm_means <- mutate(tpm_means, 
+                       stage = factor(stage, 
+                                         levels = c("Oocyte",
+                                                    "Zygote",
+                                                    "EGKI",
+                                                    "EGKIII",
+                                                    "EGKVI",
+                                                    "EGKVIII",
+                                                    "EGKX"
+                                                    )
+                                         )
+                       ) %>% 
+  ungroup()
+
+plt <- ggplot(tpm_means, 
+       aes(stage, mean_primary)) +
+  geom_boxplot(aes(fill = stage), coef = 1e3) + 
+  labs(x = "",
+       y = expression(frac("pre-mRNA TPM", 
+                           "mature + pre-mRNA TPM"))) +
+  scale_fill_brewer(palette = "Set1",
+                    name = "Transcript Type",
+                    breaks = c("pre", "mature"),
+                    labels = c("pre-mRNA", "mature-mRNA")) +
+  theme(
+    axis.text.x = element_text(angle = 90,
+                               vjust = 0.5,
+                               hjust = 0.5)
+  )
+# 
+# save_plot("chicken-pre-mRNA-ratios.pdf", plt, 
+#           base_width = 6,
+#           base_height = 4.5)
+plt
+
+```
+
+## Examine pre-mRNA ratios
+
+```{r read_in_salmon}
+fa_types <- c(
+  "eisa_masked"
+)
+
+files <- map(fa_types, 
+             ~file.path(data_dir,
+                        "salmon_bt2_masked", 
+                       species, 
+                      "HWANG",
+                        .x,
+                        mdata$run_accession,
+                        "quant.sf"))
+
+dat <- map(files, ~map(.x, read_tsv))
+names(dat) <- fa_types
+
+dat <- map(dat, function(x) {
+  names(x) <- mdata$run_accession
+  x
+} )
+
+dat <- map(dat, ~bind_rows(.x, .id = "run_accession"))
+
+dat <- bind_rows(dat, .id = "expt")
+
+#join with main data
+dat <- inner_join(dat, 
+                 mdata,
+                by = c("run_accession"))
+
+# classify transcripts as primary or mature
+dat <- dat %>% 
+  mutate(count_type = ifelse(str_detect(Name, 
+                                        "-I[0-9]*$"), 
+                             "intron", 
+                             "exon"))
+
+# drop unneeded data
+dat <- dplyr::select(dat,
+                     -c(Length:EffectiveLength, 
+                        NumReads))
+
+dat <- mutate(dat,
+              tmp_id = ifelse(count_type == "intron",
+                               str_remove(Name, "-I[0-9]*$"),
+                               Name))
+# add in geneid attribute
+tpm_dat <- left_join(dat, gene2tx, 
+                 by = c("tmp_id" = "transcript_id")) %>% 
+  dplyr::rename(transcript_id = Name)
+
+```
+
+```{r}
+# sum primary and mature TPMs for each gene 
+summary_dat <- dplyr::select(tpm_dat, TPM, gene_id, 
+              run_accession, count_type, replicate, stage) %>% 
+  group_by(gene_id, run_accession, replicate,
+           stage, count_type) %>% 
+  dplyr::summarize(total_tpm = sum(TPM, na.rm = F)) %>% 
+  ungroup() 
+
+## calc primary ratio
+tpm_summary <- summary_dat %>% 
+  spread(count_type, total_tpm) %>% 
+  mutate(primary_ratio  = intron / (intron + exon))
+
+## calc mean primary ratio
+tpm_means <- tpm_summary %>% 
+  group_by(gene_id, stage) %>% 
+  summarize(mean_primary = mean(primary_ratio, na.rm = T)) 
+
+tpm_means <- mutate(tpm_means, 
+                       stage = factor(stage, 
+                                         levels = c("Oocyte",
+                                                    "Zygote",
+                                                    "EGKI",
+                                                    "EGKIII",
+                                                    "EGKVI",
+                                                    "EGKVIII",
+                                                    "EGKX"
+                                                    )
+                                         )
+                       ) %>% 
+  ungroup()
+
+tpm_means <- dplyr::ungroup(tpm_means)
+
+p <- ggplot(tpm_means, 
+       aes(stage, mean_primary)) +
+  geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
+  labs(x = "",
+       y = expression(frac("pre-mRNA TPM", 
+                           "mature + pre-mRNA TPM"))) +
+  scale_fill_brewer(palette = "Paired") +
+  geom_vline(xintercept = 1.5, linetype = 'dashed') + 
+  geom_vline(xintercept = 4.5, linetype = 'dashed') + 
+  theme(
+    axis.text.x = element_text(angle = 90,
+                               vjust = 0.5,
+                               hjust = 0.5),
+    legend.position = "none"
+  )
+
+save_plot(file.path(fig_dir, "chicken-pre-mRNA-ratios.pdf"),
+                    p,
+          base_width = 6,
+          base_height = 4.5)
+
+p
+
+save_plot( "../figures/pdfs/fig1/chicken-pre-mRNA-ratios.pdf",
+           p,
+          base_width = 6,
+          base_height = 4.5)
+
+p
+```
+
+

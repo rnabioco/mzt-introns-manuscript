@@ -1,0 +1,627 @@
+---
+title: "figure 4 5'/3'UTR vignettes"
+author: "Kent Riemondy RBI"
+date: '`r Sys.Date()`'
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message = FALSE, warning = FALSE, include = FALSE}
+source(here::here("R/globals.r"))
+
+fig_dir <- "figs_utrs"
+out_dir <- "output_files"
+dir.create(fig_dir, recursive = TRUE)
+```
+
+
+```{r}
+isos <- read_tsv(file.path(out_dir, "all_isoform_annotations.tsv"))
+```
+
+##' Check for Alternative PAS usage
+
+```{r}
+isos_split <- filter(isos, !same_three_prime_utr) %>% 
+  split(., .$tx_class)
+
+utr_gtf <- tidy_gtf(annots$drosophila$gtf) %>% 
+  filter(type == "three_prime_utr",
+         transcript_id %in% isos$featureID) 
+
+# filter for isoforms with the same 3'UTR start position, just different ends,
+# i.e. don't compare uts generated solely via splicing, rather more likely through APA
+comparable_utrs <- utr_gtf %>%
+  select(transcript_id, start, end, strand) %>% 
+  unique() %>% 
+  left_join(select(isos,
+                   gene_id,
+                   tx_class,
+                   featureID),
+            by = c("transcript_id" = "featureID")) %>% 
+  group_by(transcript_id) %>%
+  mutate(tx_start_pos = ifelse(strand == "+",
+                           min(start),
+                           max(end))) %>% 
+  group_by(gene_id) %>% 
+  mutate(comp_utr = length(unique(tx_start_pos)) == 1) %>% 
+  filter(comp_utr) %>% 
+  pull(transcript_id) %>% 
+  unique()
+
+#utr_gtf <- filter(utr_gtf, transcript_id %in% comparable_utrs)
+
+seq_df_fwd <- get_sequences(utr_gtf, annots$drosophila$genome) %>% 
+  filter(strand == "+") %>% 
+    dplyr::group_by(transcript_id) %>% 
+    dplyr::arrange(chrom, start, end, .by_group = TRUE) %>% 
+    dplyr::summarize(seq = stringr::str_c(seq, collapse = ""))
+
+seq_df_rev <- get_sequences(utr_gtf, annots$drosophila$genome) %>% 
+  filter(strand == "-") %>% 
+    dplyr::group_by(transcript_id) %>% 
+    dplyr::arrange(chrom, desc(start), desc(end), .by_group = TRUE) %>% 
+    dplyr::summarize(seq = stringr::str_c(seq, collapse = ""))
+
+seq_df <- bind_rows(seq_df_fwd, seq_df_rev)
+```
+
+```{r}
+canonical_pas <- c(
+  "AATAAA",
+  "ATTAAA"
+)
+
+noncanonical_pas <- c(
+  "AGTAAA",
+  "TATAAA",
+  "TTTAAA",
+  "AATATA",
+  "AATACA",
+  "CATAAA",
+  "AAAATA",
+  "GATAAA",
+  "TATATA",
+  "ACTAAA",
+  "AGATAA",
+  "AATAGA",
+  "ATTACA",
+  "AGAATA"
+)
+
+pas_signals <- lst(canonical_pas,
+                 noncanonical_pas)
+
+
+find_pas_signals <- function(df_w_seqs, pas_signals){
+  
+  pas_seq_matches <- map_dfr(pas_signals, 
+                             function(signals){
+                               names(signals) <- signals
+                               map_dfr(signals, 
+                                       function(x){
+                                         res <- find_seq_match(df_w_seqs$seq, x)
+                                         names(res) <- df_w_seqs$transcript_id
+                                         map_dfr(res, as.data.frame, .id = "transcript_id")
+                                       }, .id = "pas")
+                             }, .id = "pas_type")
+  
+  seq_len <- df_w_seqs %>%
+    mutate(utr_length = nchar(seq)) %>% 
+    select(-seq)
+  
+  pas_seq_matches <- left_join(pas_seq_matches, seq_len, by = "transcript_id")
+  pas_seq_matches <- filter(pas_seq_matches, (utr_length - start) <= 50)
+  pas_seq_matches
+  
+}
+```
+
+```{r}
+tx_map <- map(isos_split, ~.x$featureID %>% .[. %in% comparable_utrs])
+
+pas_res <- map_dfr(tx_map, 
+    ~filter(seq_df, 
+           transcript_id %in% .x) %>% 
+      find_pas_signals(., pas_signals),
+    .id = "tx_class"
+    )
+
+plt_all <- ggplot(pas_res, aes(tx_class)) + 
+  geom_bar(aes(fill = pas_type), position = "fill") +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "",
+       y = "Poly(A) Signal Count",
+       fill = "")
+
+plt_can <- filter(pas_res, pas_type == "canonical_pas") %>% 
+  ggplot(., aes(tx_class)) + 
+  geom_bar(aes(fill = pas), position = "fill") +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "",
+       y = "Poly(A) Signal Count",
+       fill = "")
+
+plt_noncan <- filter(pas_res, pas_type != "canonical_pas") %>% 
+  ggplot(., aes(tx_class)) + 
+  geom_bar(aes(fill = pas), position = "fill") +
+  scale_fill_manual(values = scbp::discrete_palette_default) +
+  labs(x = "",
+       y = "Poly(A) Signal Count",
+       fill = "")
+
+p <- plot_grid(plt_all, plt_can, plt_noncan,nrow = 1, ncol = 3)
+
+p
+
+save_plot(file.path(fig_dir, "pas_usage.pdf"), 
+          p,
+          nrow = 1,
+          ncol = 3,
+          base_asp = 1.2)
+```
+
+
+There appears to be a similar distribution of PAS usage between maternal and zygotic isoforms
+
+
+## mir-309 motifs
+
+`miR-309` sits in a cluster of miRNAs with 5 distinct seeds https://doi.org/10.1016/j.cub.2008.02.081
+
+mir-3 and mir-309 have the same 2-7mer
+
+```{r}
+mir_fa <- c(">dme-miR-309-3p MIMAT0000401",
+     "GCACUGGGUAAAGUUUGUCCUA",
+    # ">dme-miR-3-3p MIMAT0000108",
+  #   "UCACUGGGCAAAGUGUGUCUCA",
+     ">dme-miR-6-1-5p MIMAT0020787",
+     "AGGGAAUAGUUGCUGUGCUGUA",
+     ">dme-miR-286-3p MIMAT0000359",
+     "UGACUAGACCGAACACUCGUGCU",
+     ">dme-miR-3-3p MIMAT0000108",
+     "UCACUGGGCAAAGUGUGUCUCA",
+     ">dme-miR-4-3p MIMAT0000109",
+     "AUAAAGCUAGACAACCAUUGA",
+     ">dme-miR-5-5p MIMAT0000110",
+     "AAAGGAACGAUCGUUGUGAUAUG")
+mir_seqs <- mir_fa[seq(2, length(mir_fa), 2)]
+names(mir_seqs) <- mir_fa[seq(1, length(mir_fa), 2)]
+
+# use bartel lab style seed match conventions
+# 8mer = match positions 2-8 with A at position 1
+# 7mer-m8 = match positions 2-8 
+# 7mer-A1 = match positions 2-7 with A at position 1
+# 6mer-A1 = match positions 2-7
+mir_seeds <- map(mir_seqs, 
+                 ~{
+                   seed_match <- str_to_upper(.x) %>% 
+                     str_replace_all("U", "T") %>% 
+                     str_sub(2, 8) %>% 
+                     revComp()
+                   mer8 <- str_c(seed_match, "A")
+                   mer7m8 <- seed_match
+                   mer7a1 <- str_c(str_sub(seed_match, 2), "A")
+                  # mer6 <- str_sub(seed_match, 2)
+                   lst(mer8,
+                       mer7m8,
+                       mer7a1)
+                 })
+
+find_mir_seeds <- function(df_w_seqs, mir_seeds){
+  
+  mir_seq_matches <- map_dfr(mir_seeds, 
+                             function(seeds){
+                               res <- map_dfr(seeds, 
+                                       function(x){
+                                         res <- find_seq_match(df_w_seqs$seq, x)
+                                         names(res) <- df_w_seqs$transcript_id
+                                         map_dfr(res, 
+                                                 ~{
+                                                   out <- as.data.frame(.x)
+                                                   if(nrow(out) == 0){
+                                                     out <- data.frame(start = 0, 
+                                                                       end = 0,
+                                                                       match = FALSE)
+                                                   } else {
+                                                     out$match <- TRUE
+                                                   }
+                                                   
+                                                   out},
+                                                   .id = "transcript_id")
+                                       }, .id = "seed_type")
+                             }, .id = "miRNA")
+  
+  mir_seq_matches
+  
+}
+```
+
+```{r}
+tx_map <- map(isos_split, ~.x$featureID )
+
+mir_res <- map_dfr(tx_map, 
+    ~filter(seq_df, 
+           transcript_id %in% .x) %>% 
+      find_mir_seeds(., mir_seeds),
+    .id = "tx_class"
+    )
+seed_ranking <- c("mer8", "mer7m8", "mer7a1")
+
+mir_res <- group_by(mir_res, tx_class, transcript_id) %>% 
+  mutate(any_match_found = any(match),
+         seed_type = factor(seed_type, levels = seed_ranking)) %>% 
+  arrange(seed_type, .by_group = TRUE) %>% 
+  mutate(best_seed = ifelse(any_match_found,
+                            as.character(seed_type)[match][1],
+                            "no match")) %>% 
+  ungroup()
+
+plt_dat <- select(mir_res, tx_class, transcript_id, best_seed) %>% 
+  unique()
+pretty_seed_labels <- c(
+  "mer8" = "8mer",
+  "mer7m8" = "7mer-m8",
+  "mer7a1" = "7mer-A1",
+   "no match" = "No match"
+)
+
+plt_dat <- mutate(plt_dat, pretty_label = pretty_seed_labels[best_seed])
+plt_prop <- ggplot(plt_dat, aes(tx_class)) + 
+  geom_bar(aes(fill = pretty_label), position = "fill") +
+  scale_fill_manual(values = scbp::discrete_palette_default) +
+  labs(x = "",
+       y = "3'UTRs with miR-309\ncluster seed matches",
+       fill = "")
+
+plt_prop
+
+save_plot(file.path(fig_dir, "mir309_cluster_seeds.pdf"), 
+          plt_prop,
+          nrow = 1,
+          ncol = 1,
+          base_asp = 1.0)
+
+```
+
+
+## 5'UTR length
+
+5'UTRs tend to increase in length in zygotic isoforms. Is a change in 5'UTR length associated with changes in translational efficiency?
+
+```{r}
+te <- read_tsv("../2019-11-21_rpfs/transcript_level_te.tsv.gz")
+iso_annots <- read_tsv(file.path(out_dir, "all_isoform_annotations.tsv"))
+
+
+utr_lengths <- iso_annots %>% 
+  filter(same_three_prime_utr, same_CDS, !same_five_prime_utr) %>% 
+  select(gene_id, five_prime_utr_length, tx_class) %>% 
+  pivot_wider(names_from = tx_class,
+              values_from = five_prime_utr_length) %>% 
+  mutate(delta_lengths = zygotic - maternal)
+  
+delta_5utr <- iso_annots %>% 
+  filter(same_three_prime_utr, same_CDS, !same_five_prime_utr) %>% 
+  pull(featureID)
+
+te_iso_changes <- iso_annots %>%
+  filter(featureID %in% delta_5utr) %>% 
+  select(tx_class, featureID, gene_name) %>% 
+  left_join(te, by = c("featureID" = "transcript_id")) 
+  
+
+te_iso_changes <- na.omit(te_iso_changes)
+sample_order <- dplyr::select(te, Stage_11:`5-6_h`) %>% 
+  colnames()
+  
+te_changes <- te_iso_changes %>% 
+  pivot_longer(cols = -(tx_class:representative_cds_transcript)) %>% 
+  mutate(sample = factor(name, levels = sample_order),
+         value = log2(value)) %>% 
+  select(representative_cds_transcript:sample) %>% 
+  unique()
+
+
+ggplot(te_changes, aes(sample, value)) + 
+  geom_violin(aes(fill = sample),
+              position = position_dodge()) +
+  labs(x = "",
+       y = "Translation Efficiency (log2)") +
+  scale_fill_brewer(palette = "Set1", 
+                    name = "") +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+  )
+
+
+te_changes <- te %>% 
+  pivot_longer(cols = -(transcript_id:representative_cds_transcript)) %>% 
+  mutate(sample = factor(name, levels = sample_order),
+         value = log2(value)) %>% 
+  select(representative_cds_transcript:sample) %>% 
+  unique()
+
+te_changes <- na.omit(te_changes)
+ggplot(te_changes, aes(sample, value)) + 
+  geom_violin(aes(fill = sample),
+              position = position_dodge()) +
+  labs(x = "",
+       y = "Translation Efficiency (log2)") +
+  scale_fill_brewer(palette = "Set1", 
+                    name = "") +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+  )
+
+```
+
+Many 5'UTR changes appear to be driven by splicing rather than changes in 5'UTR start.
+
+
+```{r}
+gtf <- tidy_gtf(annots$drosophila$gtf)
+
+tx_starts <- filter(gtf, type == "transcript") %>% 
+  group_by(transcript_id) %>% 
+  summarize(tx_start = ifelse(strand == "+",
+                              start,
+                              end))
+
+utr5_annots <- iso_annots %>% 
+  filter(same_three_prime_utr, same_CDS, !same_five_prime_utr) %>% 
+  left_join(tx_starts, by = c("featureID" = "transcript_id"))
+
+utr5_annots %>% 
+  group_by(gene_id) %>% 
+  summarize(same_start_site = ifelse(length(unique(tx_start)) == 1,
+                TRUE,
+                FALSE))
+```
+
+
+
+## 3' UTR motifs
+
+
+```{r}
+kmer_enrichment <- function(all_kmers, 
+                            group_1_genes,
+                            group_2_genes = NULL,
+                            id = "transcript_id"){
+  
+  bg_genes <- unique(all_kmers[[id]])
+  test_genes <- intersect(group_1_genes, bg_genes)
+  
+  if(!is.null(group_2_genes)){
+    bg_genes <- intersect(group_2_genes, bg_genes)
+  } 
+
+  bg <- all_kmers %>% 
+      filter(!!sym(id) %in% bg_genes) %>% 
+      mutate(success = ifelse(counts >= 1, 1L, 0L)) %>% 
+      group_by(kmer) %>% 
+      summarize(counts = sum(success))
+  
+  kmer_count <- all_kmers %>% 
+    filter(!!sym(id) %in% group_1_genes) %>% 
+    mutate(success = ifelse(counts >= 1, 1L, 0L)) %>% 
+    group_by(kmer) %>% 
+    summarize(counts = sum(success))
+  
+  kmers_total <- left_join(kmer_count, 
+                           bg,
+                           by = "kmer",
+                           suffix = c("_test", "_bg"))
+  
+  kmers_total <- mutate(kmers_total, 
+                        n_seq_test = length(unique(test_genes)),
+                        n_seq_bg = length(unique(bg_genes))) %>% 
+    na.omit()
+  
+  out <- kmers_total %>% 
+    na.omit(.) %>%
+    rowwise() %>% 
+    do(broom::tidy(binom.test(.$counts_test, .$n_seq_test, 
+                       p = .$counts_bg / .$n_seq_bg,
+            alternative = "greater"))) 
+  
+  res <- bind_cols(kmers_total, out) %>% 
+    mutate(padj = p.adjust(p.value),
+           prop.test = counts_test / n_seq_test,
+           prop.bg = counts_bg / n_seq_bg,
+           enrichment = log2(prop.test / prop.bg),
+           log10pval = -log10(padj)) %>% 
+    arrange(padj) %>% 
+    mutate(rank = row_number(),
+           enriched = ifelse(rank <= 10, T, F)) %>% 
+    arrange(padj)
+  
+  res
+  
+}
+      
+
+
+plot_kmers <- function(kmer_summary, 
+                       plot_title = "Kmers enriched in promoters",
+                       n = "",
+                       motif = "CAGGTAG"){
+  
+  labeled_kmers <- mutate(kmer_summary, 
+                          enriched = ifelse(!enriched,
+                                            str_detect(kmer, motif) & 
+                                              log10pval < -log10(0.05),
+                                            enriched)) %>%
+                            filter(enriched)
+  
+  plt <- ggplot(kmer_summary,
+                     aes(enrichment, log10pval)) +
+  geom_point() +
+  geom_text_repel(data = labeled_kmers, 
+                  aes(label = kmer), color = "red", 
+                  force = 10) +
+  labs(title = plot_title, 
+       subtitle = paste0(n, " genes"),
+       x = "Kmer Enrichment (log2)")
+  plt
+}
+
+```
+
+
+
+```{r}
+kmer_size <- 7
+isos_split <- filter(isos, !same_three_prime_utr) %>% 
+  split(., .$tx_class)
+
+utr_gtf <- tidy_gtf(annots$drosophila$gtf) %>% 
+  filter(type == "three_prime_utr")
+
+seq_df_fwd <- get_sequences(utr_gtf, annots$drosophila$genome) %>% 
+  filter(strand == "+") %>% 
+    dplyr::group_by(transcript_id) %>% 
+    dplyr::arrange(chrom, start, end, .by_group = TRUE) %>% 
+    dplyr::summarize(seq = stringr::str_c(seq, collapse = ""))
+
+seq_df_rev <- get_sequences(utr_gtf, annots$drosophila$genome) %>% 
+  filter(strand == "-") %>% 
+    dplyr::group_by(transcript_id) %>% 
+    dplyr::arrange(chrom, desc(start), desc(end), .by_group = TRUE) %>% 
+    dplyr::summarize(seq = stringr::str_c(seq, collapse = ""))
+
+seq_df <- bind_rows(seq_df_fwd, seq_df_rev)
+
+kmers_3utrs <- mutate(seq_df, 
+                      kmers = get_kmers(seq,
+                                        n = 7,
+                                        both_strands = FALSE)) %>% 
+                select(transcript_id, kmers) %>% 
+  unnest_legacy() 
+
+kmer_results <- kmer_enrichment(kmers_3utrs, 
+                      isos_split$zygotic$featureID,
+                      isos_split$maternal$featureID)
+
+
+a <- filter(kmers_3utrs, transcript_id %in% isos_split$zygotic$featureID) %>% 
+  pull(kmer)
+
+zyg_kmers <- filter(seq_df, 
+                    transcript_id %in% isos_split$zygotic$featureID) %>% 
+  pull(seq) %>% 
+  unique()
+
+mat_kmers <- filter(seq_df, 
+                    transcript_id %in% isos_split$maternal$featureID) %>% 
+  pull(seq) %>% 
+  unique()
+```
+
+```{r}
+library(transite)
+
+v_all_dat <- calculateKmerEnrichment(list(zyg_kmers,
+                                  mat_kmers),
+                             seq_df$seq, k = 6)
+
+v_each_other <- calculateKmerEnrichment(list(zyg_kmers),
+                             c(zyg_kmers, mat_kmers), k = 6)
+
+map(v_all_dat$dfs, 
+    ~mutate(.x, kmers = v_all_dat$kmers) %>%
+      arrange(adj.p.value)) -> a
+
+mutate(v_each_other$dfs[[1]], kmers = v_all_dat$kmers) %>%
+      arrange(adj.p.value) -> b
+
+
+v_each_other <- runKmerTSMA(zyg_kmers,
+                             c(zyg_kmers, mat_kmers))
+```
+
+
+
+
+## 5' UTR kmers
+
+```{r}
+kmer_size <- 7
+isos_split <- filter(isos, !same_five_prime_utr) %>% 
+  split(., .$tx_class)
+
+utr_gtf <- tidy_gtf(annots$drosophila$gtf) %>% 
+  filter(type == "five_prime_utr")
+
+seq_df_fwd <- get_sequences(utr_gtf, annots$drosophila$genome) %>% 
+  filter(strand == "+") %>% 
+    dplyr::group_by(transcript_id) %>% 
+    dplyr::arrange(chrom, start, end, .by_group = TRUE) %>% 
+    dplyr::summarize(seq = stringr::str_c(seq, collapse = ""))
+
+seq_df_rev <- get_sequences(utr_gtf, annots$drosophila$genome) %>% 
+  filter(strand == "-") %>% 
+    dplyr::group_by(transcript_id) %>% 
+    dplyr::arrange(chrom, desc(start), desc(end), .by_group = TRUE) %>% 
+    dplyr::summarize(seq = stringr::str_c(seq, collapse = ""))
+
+seq_df <- bind_rows(seq_df_fwd, seq_df_rev)
+
+kmers_5utrs <- mutate(seq_df, 
+                      kmers = get_kmers(seq,
+                                        n = 7,
+                                        both_strands = FALSE)) %>% 
+                select(transcript_id, kmers) %>% 
+  unnest_legacy() 
+
+isos_split <- split(isos, isos$tx_class)
+kmer_results <- kmer_enrichment(kmers_5utrs, 
+                      isos_split$zygotic$featureID,
+                      isos_split$maternal$featureID)
+
+
+```
+
+```{r}
+library(transite)
+
+
+zyg_kmers <- filter(seq_df, 
+                    transcript_id %in% isos_split$zygotic$featureID) %>% 
+  pull(seq) %>% 
+  unique()
+
+mat_kmers <- filter(seq_df, 
+                    transcript_id %in% isos_split$maternal$featureID) %>% 
+  pull(seq) %>% 
+  unique()
+
+v_all_dat <- calculateKmerEnrichment(list(zyg_kmers,
+                                  mat_kmers),
+                             seq_df$seq, k = 6)
+
+v_each_other <- calculateKmerEnrichment(list(zyg_kmers),
+                             c(zyg_kmers, mat_kmers), k = 6)
+
+map(v_all_dat$dfs, 
+    ~mutate(.x, kmers = v_all_dat$kmers) %>%
+      arrange(adj.p.value)) -> a
+
+mutate(v_each_other$dfs[[1]], kmers = v_all_dat$kmers) %>%
+      arrange(adj.p.value) -> b
+
+
+v_each_other <- runKmerTSMA(zyg_kmers,
+                             c(zyg_kmers, mat_kmers))
+```

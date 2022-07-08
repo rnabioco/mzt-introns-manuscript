@@ -31,3 +31,8 @@ pipeline/logs/*
 *.tsv*
 *.fa
 *.saf
+*.csv
+*.ppt
+*.tif
+*.fai
+*.bai

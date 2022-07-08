@@ -1,0 +1,84 @@
+# config for MZT intron quantification snakemake pipeline #
+
+RAWDATA:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/data/raw_data/xenopus_t/OWENS_POLYA"
+# directory with fastqs and generated data
+DATA: 
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/data/owens_polya"
+
+# directory for output databases
+DBASES: 
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/owens_polya" 
+
+# genome fasta file
+GENOME:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/xenopus_t/ext/xenTro9.fa"
+
+# transcript annotation in GTF format
+TRANSCRIPTS:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/xenopus_t/ext/xenTro9.gtf"
+
+# intron annotation in SAF format (see results/00.Rmd to generate from
+# STAR alignments)
+# leave blank if traditional alignmnet approach not needed
+INTRONS:
+    ""
+EXONS:
+    ""
+
+# fasta index file
+CHROM_SIZES:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/xenopus_t/ext/xenTro9.fa.fai"
+
+# Path to star index
+GENOME_DIR:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/xenopus_t/star/jgi_xentrop9.1"
+
+# experiment specific settings
+# trim: settings for cutadapt
+# intron/exon_count: settings for featureCounts, only run if introns/exons
+# defined above
+# stranded: either forward of reverse
+# map: additional settings for salmon quantification
+# bt_map: additional settings for bowtie2 mapping  
+# fq: suffix for R1 and R2
+#
+CMDPARAMS:
+    trim: " "
+    intron_count: " --minOverlap 10 -s 2 "
+    exon_count: " --fracOverlap 1 -s 2 "
+    salmon: " --libType 'ISR' "
+    stranded: "reverse"
+    bowtie: ""
+    fq: 
+        - "_1.fastq.gz"
+        - "_2.fastq.gz"
+
+# sample names that indicate samples from the earliest timepoint in the timecourse
+# (e.g. a zygote or other pre-ZGA sample). 
+T0_SAMPLES:
+    - "SRR1795535"
+    - "SRR1795679"
+
+# Path to file with library definitions
+LIB_PARAMS: "frog_polya_lib_params.tsv"
+
+# directory for auxillary scripts
+SRC: 
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/src" 
+
+# directory for R scripts
+RSRC:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/R"
+
+SINGULARITY:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns/docker/mzt-introns.sif"
+
+#memory allocation (MB) for default rules, or higher memory processes
+MALLOC:
+    DEFAULT: "4096"
+    SALMON: "16000"
+    STAR: "36864"
+
+CLUSTER: 
+    "LSF"

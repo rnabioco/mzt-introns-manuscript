@@ -1,25 +1,16 @@
 """ rules for trimming """ 
 
 def _trim_settings(wildcards):
-  """ lookup global dictionary LIB_MAP via sample
-      wildcard and return settings for cutadapt 
-      based on library type definition 
-  """
-  id = os.path.basename(wildcards.sample)
-  if id in LIB_MAP:
-     lib_attrs = LIB_MAP[id]
-     trim_settings = config[lib_attrs]["trim"]
-  else:
-     print("WARNING: no trimming settings found for library: {}".format(id),
-       file = sys.stderr)
-     trim_settings = ""
+  try:
+    trim_settings = CMD_CONFIG["trim"]
+  except:
+    print("WARNING: no trimming settings found for library: {}".format(id),
+      file = sys.stderr)
+    trim_settings = ""
 
   return trim_settings
 
 def _fq_types(wildcards):
-  """ lookup global dictionary LIB_MAP via sample
-      and lookup fastq suffixes
-  """
   id = os.path.basename(wildcards.sample)
   if id in LIB_MAP:
      lib_attrs = LIB_MAP[id]
@@ -36,25 +27,25 @@ def _fq_types(wildcards):
 
 rule cutadapt_single:
   input:
-    _fq_types, 
+    _raw_fqs, 
   output:
-    path.join("{data}", "fastq", "trimmed", "{species}", "{expt}",
-      "{sample}_trimmed.fastq.gz")
+    path.join("{data}", "fastq", "trimmed",  "{sample}_trimmed.fastq.gz")
   params:
     settings = _trim_settings,
   log:
-    path.join("{data}", "fastq", "trimmed", "logs", "{species}", "{expt}", "{sample}.txt") 
+    path.join("{data}", "logs", "cutadapt", "{sample}.txt") 
   message:
-    " trimming illumina adapters" 
+    " trimming adapters" 
   threads:
-    1
+    6
   resources: 
-      all_threads=1,
+      all_threads=6,
       mem_mb=MEM_ALLOC["DEFAULT"]
   shell:
     """
     cutadapt \
-      -m 18 \
+      -m 20 \
+      --cores {threads} \
       {params.settings} \
       -o {output} \
       {input[0]} 
@@ -62,27 +53,28 @@ rule cutadapt_single:
 
 rule cutadapt_paired:
   input:
-    _fq_types, 
+    _raw_fqs, 
   output:
-    path.join("{data}", "fastq", "trimmed", "{species}", "{expt}",
+    path.join("{data}", "fastq", "trimmed",
     "{sample}_R1_trimmed.fastq.gz"), 
-    path.join("{data}", "fastq", "trimmed", "{species}", "{expt}",
+    path.join("{data}", "fastq", "trimmed", 
     "{sample}_R2_trimmed.fastq.gz") 
   params:
     settings = _trim_settings,
   log:
-    path.join("{data}", "fastq", "trimmed", "logs", "{species}", "{expt}", "{sample}.txt") 
+    path.join("{data}", "logs", "cutadapt", "{sample}.txt") 
   message:
-    " trimming illumina adapters" 
+    " trimming adapters" 
   threads:
-    1
+    6
   resources: 
-      all_threads=1,
+      all_threads=6,
       mem_mb=MEM_ALLOC["DEFAULT"]
   shell:
     """
     cutadapt \
-      -m 18 \
+      -m 20 \
+      --cores {threads} \
       {params.settings} \
       -o {output[0]} \
       -p {output[1]} \

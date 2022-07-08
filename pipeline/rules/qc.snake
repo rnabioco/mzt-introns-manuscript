@@ -1,36 +1,24 @@
-""" rules for basic QC checks """ 
+""" rule for basic QC checks """ 
 
-raw = path.join("{data}", "raw_data")
-qc = path.join("{data}", "qc")
-
-def _fq_types(wildcards):
-  """ lookup global dictionary LIB_MAP via sample
-      and lookup fastq suffixes
-  """
-  id = os.path.basename(wildcards.sample)
-  if id in LIB_MAP:
-     lib_attrs = LIB_MAP[id]
-     fq_types = config[lib_attrs]["fq"]
-     fq_names = [path.join(wildcards.data,
-                           "raw_data",
-                           wildcards.species, 
-                           wildcards.expt, 
+def _raw_fqs(wildcards):
+  try:
+     fq_types = CMD_CONFIG["fq"]
+     fq_names = [path.join(RAWDATA,
                            wildcards.sample + x) for x in fq_types]
-  else:
-     sys.exit("no fastq suffixes found for library: {}".format(id))
+  except:
+     sys.exit("no fastq suffixes found for library:{}".format(wildcards.sample))
 
   return fq_names
 
-
 rule fastqc:
   input:
-    _fq_types, 
+    _raw_fqs, 
   output:
-    path.join(qc, "fastqc", "{species}", "{expt}", "{sample}_fastqc/summary.txt"),
+    path.join("{data}", "qc", "fastqc", "{sample}_fastqc.html"),
   params:
-    out_dir = path.join(qc, "fastqc", "{species}", "{expt}"),
+    out_dir = path.join("{data}", "qc", "fastqc"),
   log:
-    path.join(qc, "logs", "fastqc", "{species}", "{expt}", "{sample}.txt") 
+    path.join("{data}", "logs", "fastqc", "{sample}.txt") 
   message:
     "fastqc analysis of {wildcards.sample} "
   threads:

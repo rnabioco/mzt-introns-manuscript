@@ -2,62 +2,47 @@
 from pathlib import Path
 
 def _strand_settings(wildcards):
-  """ lookup global dictionary LIB_MAP via sample
-      wildcard and return settings for featurecounts 
-      based on library type definition 
-  """
-  id = os.path.basename(wildcards.sample)
-  if id in LIB_MAP:
-     lib_attrs = LIB_MAP[id]
-  else:
-     sys.exit(f"config settings for {id} not found ")
+  try:
+    strand = CMD_CONFIG["stranded"]
+  except:
+    sys.exit(f"stranded settings for {id} not found ")
 
-  if "stranded" in config[lib_attrs]:    
-     strand = config[lib_attrs]["stranded"]
-  else:
-     sys.exit(f"stranded settings for {id} not found ")
-  
   if strand == "forward":
       setting = 1
   elif strand == "reverse":
       setting = 2
   else:
-      setting == 0
+      setting = 0
 
   return setting
 
 
 rule fc_introns_exons:
   input:
-    bam = "{data}/star/{species}/{expt}/{sample}/{sample}_sorted.bam",
+    bam = "{data}/star/{sample}/{sample}_sorted.bam",
   output:
-    "{data}/featurecounts/{species}/{expt}/{sample}_intron_exon_counts.tsv",
+    "{data}/featurecounts/{sample}_intron_exon_counts.tsv",
   params:
-    in_annots = lambda wildcards: INTRONS[wildcards.species],
-    ex_annots = lambda wildcards: EXONS[wildcards.species],
+    in_annots = INTRONS,
+    ex_annots = EXONS,
     strand = _strand_settings,
     r = os.path.join(RSRC, "fcount_introns_exons.R"),
-    out_pre = "{data}/featurecounts/{species}/{expt}/{sample}"
+    out_pre = "{data}/featurecounts/{sample}"
   log:
-    "{data}/featurecounts/logs/{species}/{expt}/{sample}_intron_summary.txt"
+    "{data}/logs/featurecounts/{sample}_intron_summary.txt"
   threads:
     12
   resources: 
       all_threads=12,
       mem_mb=MEM_ALLOC["DEFAULT"]
-  run:
-    if params.in_annots and params.ex_annots:
-      shell(
-        """
-        Rscript --vanilla \
-                {params.r} \
-                {input} \
-                {params.in_annots} \
-                {params.ex_annots} \
-                {params.strand} \
-                {output} \
-                {threads}
-        """)
-    else:
-      Path(output[0]).touch()
-    
+  shell:
+   """
+   Rscript --vanilla \
+           {params.r} \
+           {input} \
+           {params.in_annots} \
+           {params.ex_annots} \
+           {params.strand} \
+           {output} \
+           {threads}
+   """ 

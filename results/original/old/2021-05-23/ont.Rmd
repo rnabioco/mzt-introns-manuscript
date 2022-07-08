@@ -1,0 +1,1325 @@
+---
+title: "Long-read characterization of the MZT in Drosophila"
+author: "Kent Riemondy RBI"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, message = FALSE)
+source(here::here("R/globals.r"))
+library(Rsamtools)
+```
+
+
+
+RNA was collected from 0-1 hour or 4-5 hour *Drosophila* embryos and sequenced using direct RNA sequencing on the oxford nanopore technologies (ONT) platform.
+
+## Goals:
+
+- Examine isoforms in the maternal transcriptome and post major-wave of the MZT. Compare to isoforms detected by short read sequencing that have evidence of switching during the MZT. 
+
+- Examine poly(A) tail lengths and RNA modifications pre and post major-wave estimated from raw sequencing traces. 
+
+## Isoform characterization:
+
+- Nanopore reads were rebasecalled offline using guppy (necessary for calling polyA tails).
+- reads were aligned to either the transcriptome or genome (splice-aligned) using minimap2 with appropriate settings
+
+- transcripts were quantified with salmon using the transcriptome alignments 
+
+```{r}
+fig_dir <- file.path("figs_ont")
+dir.create(fig_dir, showWarnings = FALSE)
+col_pal <- scbp::palette_OkabeIto
+```
+
+### Library QC (transcript mapped)
+
+```{r, fig.cap="Summary of read alignments to the drosophila transcriptome (using minimap2) or to the yeast control RNA. Numbers at the base of each bar indicate total # of raw reads."}
+
+samples <- c(
+  "0-1_hr_1_rerun",
+  "0-1_hr_2_rerun",
+  "4-5_hr_1_rerun",
+  "4-5_hr_2_rerun"
+)
+
+bam_fns <- file.path(project_dir, 
+                     "data", 
+                     "ont",
+                     "sorted_alignments",
+                     str_c(samples, ".bam"))
+
+# from Rsamtools tutorial
+.unlist <- function (x) {
+  ## do.call(c, ...) coerces factor to integer, which is undesired
+  x1 <- x[[1L]]
+  if (is.factor(x1)) {
+    structure(unlist(x), class = "factor", levels = levels(x1))
+  } else {
+    do.call(c, x)
+  }
+}
+
+
+bam_align_summary <- function(bam_fn,
+                              fields = c("qname", "flag", "rname")){
+  params <- ScanBamParam(what = fields)
+  bam <- scanBam(bam_fn, 
+               param = params)
+  bam <- unname(bam) # names not useful in unlisted result
+  elts <- setNames(bamWhat(params), bamWhat(params))
+  lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
+  b <-  as_tibble(do.call("data.frame", lst)) 
+  n_reads <- length(unique(b$qname))
+  aligned <- filter(b,flag != 4)
+  n_fly_aligned <- pull(aligned, qname) %>% 
+    unique() %>% 
+    length()
+
+  percent_aligned <- 100 * (n_fly_aligned / n_reads)
+  
+  if(is.null(names(bam_fn))){
+    sample <- basename(bam_fn) %>% str_remove(".bam")
+  } else {
+    sample <- names(bam_fn)[1]
+  }
+  
+  tibble(sample, 
+         n_reads, 
+         n_fly_aligned, 
+         percent_aligned, 
+         bam_fn)
+}
+
+fly_alignments <- map_dfr(bam_fns, 
+                          bam_align_summary)
+
+genome_bam_fns <- file.path(project_dir, 
+                     "data", 
+                     "ont-genome",
+                     "sorted_alignments",
+                     str_c(samples, ".bam"))
+
+fly_genome_alignments <- map_dfr(genome_bam_fns, 
+                          bam_align_summary)
+
+fly_alignments <- bind_rows(
+  list(transcriptome_aligned = fly_alignments, 
+       genome_aligned = fly_genome_alignments),
+  .id = "type"
+)
+p <- fly_alignments %>% 
+  mutate(percent_not_aligned = 100 - percent_aligned) %>% 
+  select(-bam_fn) %>% 
+  pivot_longer(cols = -c(sample, type)) %>% 
+  filter(!name %in% c("n_fly_aligned", "n_reads")) %>% 
+  mutate(name = str_remove(name, "percent_") %>% 
+           str_to_title() %>% 
+           str_replace("_", " ")) %>% 
+  ggplot(aes(sample, value)) +
+    geom_col(aes(fill = name)) +
+    geom_text(data = fly_alignments %>% select(sample, n_reads),
+            aes(x = sample,
+                y = 10,
+                label = scales::comma(n_reads)),
+                angle = 90) +
+    facet_wrap(~type)+ 
+   scale_fill_manual(values = col_pal) +
+  labs(x = "Library",
+       y = "Percent of Reads",
+       fill = "") +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.5))
+p
+save_plot(file.path(fig_dir, "alignment-summary.pdf"), p,
+          base_asp = 2,
+          base_height = 5.25)
+```
+```{r, eval = FALSE}
+GenomicAlignments::readGAlignments(bam_fns[1]) -> a
+```
+
+
+### Read lengths
+
+```{r, fig.cap="Read length distributions of reads that map to the drosophila transcriptome."}
+
+read_length_summary <- function(bam_fn, flags_to_exclude = c(4, 256, 272, 2048, 2064, 16)){
+  df <- GenomicAlignments::readGAlignments(bam_fn, 
+                                     param = ScanBamParam(what = c("qname", "flag"),
+                                     flag = scanBamFlag(isUnmappedQuery = FALSE))) %>% 
+    as.data.frame() %>% 
+    dplyr::rename(rname = seqnames,
+                  read_width = qwidth,
+                  read_align_width = width)
+  
+  df <- filter(df, rname != "YHR174W", !flag %in% flags_to_exclude)
+  # df <- group_by(df, qname) %>% summarize(read_width = max(read_width),
+  #                                         .groups = "drop")
+   if(is.null(names(bam_fn))){
+    df$sample <- basename(bam_fn) %>% str_remove(".bam")
+  } else {
+    df$sample <- names(bam_fn)[1]
+  }
+  select(df, sample, rname, qname, read_width, read_align_width)
+}
+  
+read_lengths <- map_dfr(bam_fns, read_length_summary) 
+
+read_lengths_summary <- group_by(read_lengths, sample) %>% 
+  summarize(median_vals = median(read_align_width), .groups = "drop")
+
+p <- ggplot(read_lengths, aes(x = read_width)) +
+  geom_histogram(bins = 100) +
+  geom_vline(data = read_lengths_summary,
+             aes(xintercept = median_vals),
+             linetype = "dashed",
+             color = 'blue') + 
+  facet_grid(sample ~ ., scale = "free_y") +
+  labs(x = "Read Length") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(strip.text = element_text(size= 8))
+
+p
+
+save_plot(file.path(fig_dir, "read_length_distribution.pdf"),
+          p,
+          base_height = 5,
+          base_asp = 1)
+
+p <- filter(read_lengths, 
+            read_width < 4000) %>% 
+  ggplot(., aes(x = read_width)) +
+  geom_histogram(bins = 100) +
+  geom_vline(data = read_lengths_summary,
+             aes(xintercept = median_vals),
+             linetype = "dashed",
+             color = 'blue') + 
+  facet_grid(sample ~ ., scale = "free_y") +
+  labs(x = "Read Length") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(strip.text = element_text(size= 8))
+
+p
+
+save_plot(file.path(fig_dir, "capped_read_length_distribution.pdf"),
+          p,
+          base_height = 5,
+          base_asp = 1)
+
+```
+
+```{r}
+read_lengths_summary
+```
+### Examine read length in relation to tx length
+
+```{r}
+gtf_fn <- annots$drosophila$gtf
+gtf <- import(gtf_fn)
+gtf <- as.data.frame(gtf)
+
+tx_lengths <- gtf %>% 
+  filter(type == "exon") %>% 
+  group_by(transcript_id, gene_name) %>% 
+  summarize(tx_width = sum(width)) %>% 
+  as_tibble() %>% 
+  unique()
+
+read_length_stats <- read_lengths %>% 
+  left_join(tx_lengths, by = c("rname" = "transcript_id")) %>% 
+  mutate(tx_coverage = read_align_width / tx_width)
+
+p <- filter(read_length_stats, tx_width < 10000) %>%  
+ ggplot(., aes(tx_width, read_align_width)) +
+  geom_point(alpha = 0.05, size = 0.00001) +
+  facet_wrap(~sample, nrow = 1) +
+  labs(x = "Length of annotated transcript",
+       y = "Read length")
+p
+
+save_plot(file.path(fig_dir, "tx_vs_read_length_distribution.png"),
+          p,
+          base_asp = 1,
+          nrow = 1,
+          ncol = 4)
+
+
+p <- filter(read_length_stats, tx_width < 10000) %>%  
+ ggplot(., aes(tx_coverage)) +
+  geom_histogram(bins = 100) +
+  facet_wrap(~sample, scales = "free", nrow = 1) +
+  labs(x = "Proportion of transcript with coverage",
+       y = "# of reads")
+p
+
+save_plot(file.path(fig_dir, "tx_coverage_distribution.pdf"),
+          p,
+          base_asp = 1,
+          nrow = 1,
+          ncol = 4)
+```
+```{r}
+read_length_stats %>% 
+  filter(tx_coverage > 0.90) %>%
+  select(sample, qname) %>% 
+  split(., .$sample) %>% 
+  map(~pull(.x, qname)) %>% 
+  iwalk(~writeLines(.x, str_c(.y, "full_length_reads.txt")))
+
+read_length_stats %>% 
+  filter(tx_coverage > 0.90) %>% 
+  write_tsv("full_length_read_alignments.tsv")
+
+mat_ont <- read_length_stats %>% 
+  filter(str_detect(sample, "0-1"))%>% 
+  mutate(sample = "0-1 hr")
+
+zyg_ont <- read_length_stats %>% 
+  filter(str_detect(sample, "4-5")) %>% 
+  mutate(sample = "4-5 hr")
+
+bind_rows(mat_ont, zyg_ont) %>% 
+  write_tsv("all_merged_read_alignments.tsv")
+
+bind_rows(mat_ont, zyg_ont) %>% 
+  filter(tx_coverage > 0.90) %>% 
+  write_tsv("full_length_merged_read_alignments.tsv")
+```
+
+## Transcripts detected 
+
+```{r}
+salmon_fns <- file.path(project_dir, 
+                        "data",
+                        "ont",
+                        "counts",
+                        str_c(samples, "_salmon"),
+                        "quant.sf")
+
+tx <- tximport(salmon_fns, 
+               type = "salmon",
+               txOut = TRUE)
+
+tx <- lapply(tx, function(x){
+  if(length(x) == 1){
+    return(x)
+  } 
+  x[rownames(x) != "YHR174W", ]
+})
+```
+
+```{r}
+tx_counts <- tx$counts
+colnames(tx_counts) <- samples
+tx_summary <- tx_counts %>% 
+  as.data.frame() %>% 
+  rownames_to_column("tx") %>% 
+  pivot_longer(cols = -tx,
+               names_to = "sample",
+               values_to = "ont_counts") %>% 
+  mutate(developmental_stage = str_remove(sample, "_[0-9].*$") %>% # match stage names with short read data
+           str_replace("_", " ") %>% 
+           str_c(., " embryo")) 
+  
+tpms <- tx$abundance
+colnames(tpms) <- samples
+tx_tpm_summary <- tpms %>% 
+  as.data.frame() %>% 
+  rownames_to_column("tx") %>% 
+  pivot_longer(cols = -tx,
+               names_to = "sample",
+               values_to = "ont_tpms") %>% 
+  mutate(developmental_stage = str_remove(sample, "_[0-9].*$") %>% # match stage names with short read data
+           str_replace("_", " ") %>% 
+           str_c(., " embryo")) 
+```
+
+```{r}
+tx_stats <- tx_summary %>% 
+  filter(ont_counts > 0) %>% 
+  dplyr::count(sample) %>% 
+  mutate(n = str_c("> 0 counts: ", n)) %>% 
+  mutate(x = 300,
+         y = 0.5)
+
+tx_stats <- tx_summary %>% 
+  filter(ont_counts > 0) %>% 
+  group_by(sample) %>% 
+  summarize(n = str_c(">0 counts: ", sum(ont_counts > 0), "\n",
+                      ">50 counts: ", sum(ont_counts > 50), "\n",
+                      ">500 counts: ", sum(ont_counts > 500))) %>% 
+  mutate(x = 300,
+         y = 0.33)
+
+p <- tx_summary %>% 
+  filter(ont_counts > 0, ont_counts < 500) %>% 
+  ggplot(aes(ont_counts)) + 
+  stat_ecdf() +
+  geom_vline(xintercept = 50,
+             linetype = "dashed",
+             color = 'blue') + 
+  geom_text(data = tx_stats, 
+            aes(x = x, y = y, label = n)) + 
+  
+  facet_wrap(~sample, nrow = 1) + 
+  labs(x = "ONT read counts per transcript",
+       y = "ECDF")
+
+save_plot(file.path(fig_dir, "ont_transcript_count_distribution.pdf"),
+          p,
+          nrow = 1,
+          ncol = 4, 
+          base_asp = 1)
+
+p
+```
+
+
+
+### Examine # of switching-isoforms detected in ONT data
+
+Table showing the # of transcripts that have altered isoform ratios pre and post-major-wave MZT based on illumina libraries, that are detectable by ONT sequencing. 
+```{r}
+switch_isos <- read_excel(file.path("..",
+                                    "2021-06-publication",
+                                    "output_files",
+                                    "isoform_summary.xlsx"),
+           sheet = 2) 
+  
+switch_isos_summary <- tx_summary %>% 
+  mutate(detected = ont_counts > 0) %>% 
+  group_by(developmental_stage, tx) %>% 
+  summarize(n_samples = sum(detected),
+            mean_counts = mean(ont_counts),
+            total_counts = sum(ont_counts),
+            .groups = "drop") %>% 
+  filter(n_samples >= 1) %>% 
+  select(developmental_stage, mean_counts, tx) %>% 
+  pivot_wider(names_from = "developmental_stage",
+              values_from = "mean_counts") %>% 
+  left_join(switch_isos, ., by = c("transcript_id"= "tx"))
+
+mutate(switch_isos_summary, 
+       `detected_0-1_hr` = ifelse(is.na(`0-1 hr embryo`),
+                                FALSE,
+                                `0-1 hr embryo` > 0),
+       `detected_4-5_hr` = ifelse(is.na(`4-5 hr embryo`),
+                                FALSE,
+                                `4-5 hr embryo` > 0)) %>% 
+  group_by(transcript_type,
+           `detected_0-1_hr`,
+           `detected_4-5_hr`) %>% 
+  summarize(`# of transcripts` = n()) %>% 
+  group_by(transcript_type) %>% 
+  mutate(percent = 100 * (`# of transcripts`  / sum(`# of transcripts`))) %>% 
+  arrange(desc(`# of transcripts`), 
+          .by_group = TRUE)
+```
+```{r}
+ont_validated <- switch_isos_summary %>% 
+  filter(transcript_type == "maternal" & !is.na(`0-1 hr embryo`) |
+           transcript_type == "zygotic" & !is.na(`4-5 hr embryo`)) %>% 
+  group_by(gene_name) %>% 
+  mutate(both_detected = all(c("maternal", "zygotic") %in% transcript_type)) %>% 
+  filter(both_detected) %>% 
+  pull(transcript_id) 
+
+switch_isos_summary <- mutate(switch_isos_summary, 
+       ont_validated = transcript_id %in% ont_validated)
+
+switch_isos_summary %>% 
+  select(gene_name, ont_validated) %>% 
+  distinct() %>% 
+  dplyr::count(ont_validated)
+```
+
+
+## Calc DTU using nanopore data directly
+
+```{r, eval = FALSE}
+salmon_fns <- file.path(project_dir, 
+                        "data",
+                        "ont",
+                        "counts",
+                        str_c(samples, "_salmon"),
+                        "quant.sf")
+
+tx <- tximport(salmon_fns, 
+               type = "salmon",
+               txOut = TRUE)
+
+tx <- lapply(tx, function(x){
+  if(length(x) == 1){
+    return(x)
+  } 
+  x[rownames(x) != "YHR174W", ]
+})
+
+
+
+
+tids <- read_tsv(salmon_fns[1]) %>% 
+  dplyr::select(Name)
+
+gtf_fn <- annots$drosophila$gtf
+gtf <- import(gtf_fn)
+gtf <- as.data.frame(gtf)
+
+tx2gene <- gtf %>% 
+  filter(type == "transcript") %>% 
+  dplyr::select(transcript_id, gene_id) %>% 
+  as_tibble() %>% 
+  unique()
+
+tx2gene_mapping <- full_join(tids, tx2gene,
+                             by = c("Name" = "transcript_id"))
+
+gene2symbol <- gtf %>% 
+  filter(type == "gene") %>% 
+  dplyr::select(gene_id, gene_name) %>% 
+  tbl_df() %>% 
+  unique()
+
+
+cts <- tx$counts
+colnames(cts) <- samples
+cts <- cts[rowSums(cts) > 0,]
+
+pdata <- data.frame(sample = samples) %>% 
+  mutate(developmental_stage = str_remove(sample, "_[0-9].*$") %>% # match stage names with short read data
+           str_replace("_", " ") %>% 
+           str_c(., " embryo"),
+         mzt = ifelse(developmental_stage == "0-1 hr embryo",
+                      "maternal",
+                      "zygotic"))   %>% 
+  as.data.frame(row.names = samples)
+
+tx2gene_mapping <- left_join(tibble(Name = rownames(cts)),
+                             tx2gene_mapping,
+                             by = "Name") 
+
+cts <- cts[!is.na(tx2gene_mapping$gene_id), ]
+tx2gene_mapping <- tx2gene_mapping[!is.na(tx2gene_mapping$gene_id), ]
+
+library(DEXSeq)
+
+dxd <- DEXSeqDataSet(countData=round(cts),
+                     sampleData=pdata,
+                     design=~sample + exon + mzt:exon,
+                     featureID=tx2gene_mapping$Name,
+                     groupID=tx2gene_mapping$gene_id)
+
+dxd <- estimateSizeFactors(dxd)
+dxd <- estimateDispersions(dxd, quiet=TRUE)
+dxd <- testForDEU(dxd, reducedModel=~sample + exon)
+dxd <- estimateExonFoldChanges( dxd, fitExpToVar="mzt")
+dxr <- DEXSeqResults(dxd, independentFiltering=FALSE)
+
+qval <- perGeneQValue(dxr)
+dxr.g <- tibble(gene = names(qval),
+                qval) %>% 
+  arrange(qval) %>% 
+  left_join(gene2symbol, by = c("gene" = "gene_id"))
+  
+table(dxr.g$qval < 0.05)
+```
+
+## Examine poly(A) tails
+
+`tailfindr` 
+
+Generate a table with each each an the respective alignments to match against the tailfindr polyA tail estimates. Primary alignments  will be selected for matching against the transcripts. 
+
+```{r, eval = FALSE}
+# new data
+fq_libs <- c(
+  "w1118_0-1replicate1_040121",
+  "W1118_0-1replicate2_043021",
+  "w1118_4-5replicate1_040321",
+  "W1118_4-5replicate2_050421"
+)
+
+names(fq_libs) <- c(
+  "0-1_hr_1",
+  "0-1_hr_2",
+  "4-5_hr_1",
+  "4-5_hr_2"
+)
+
+bam_fns <- str_subset(bam_fns, "rerun")
+tail_fns <- file.path(project_dir, 
+                     "data", 
+                     "ont",
+                     "offline-basecalling",
+                     fq_libs,
+                     "workspace",
+                     "pAtails",
+                     str_c(fq_libs, ".csv"))
+
+# map tail lengths to transcripts
+# note that this function will just keep primary alignments 
+# no MAPQ filtering by default
+map_tails_to_tx <- function(tail_fn,
+                            bam_fn, 
+                            flags_to_exclude = c(4, 256, 272, 2048),
+                            min_mapq = 0){
+  b <- scanBam(bam_fn, 
+               param = ScanBamParam(what = c("qname", "flag", "rname", "mapq"),
+                                    flag = scanBamFlag(isUnmappedQuery = FALSE)))
+  # prevent factor coercion to integer
+  b[[1]]$rname <- as.character(b[[1]]$rname)
+  read_df <-  as_tibble(do.call(cbind, b[[1]][1:4])) 
+  tail_df <- read_csv(tail_fn) %>% dplyr::rename(qname = read_id)
+  res <- inner_join(read_df, tail_df) %>% filter(rname != "YHR174W")
+  res <- mutate(res, 
+                sample = basename(tail_fn) %>% str_remove(".csv"),
+                .before = 1)
+  filter(res, 
+         !flag %in% flags_to_exclude,
+         mapq >= min_mapq)
+}
+
+tail_lens <- map2_dfr(tail_fns, bam_fns, map_tails_to_tx) %>% 
+  filter(!is.na(tail_length))
+
+fq_lookup <- names(fq_libs)
+names(fq_lookup) <- fq_libs
+
+tx2symbol <- gtf %>% 
+  filter(type == "transcript") %>% 
+  dplyr::select(transcript_id, gene_name) %>% 
+  as_tibble() %>% 
+  unique()
+
+tail_lens <- left_join(tail_lens, 
+                       tx2symbol, 
+                       by = c("rname" = "transcript_id"))
+tail_lens <- tail_lens %>% 
+  mutate(sample_id = fq_lookup[sample]) %>% 
+  separate(sample_id, c("timepoint", "tmp", "rep"), sep = "_", remove = FALSE) %>% 
+  dplyr::select(-tmp) 
+```
+
+
+
+```{r, eval = FALSE}
+pal_sample_summary <- tail_lens %>% 
+  group_by(sample, timepoint, rep, rname) %>%
+  summarize(median_tail_len = median(tail_length, na.rm = TRUE),
+            n_reads = n(),
+            gene_name = unique(gene_name)) %>% 
+  ungroup() %>% 
+  filter(n_reads >= 10) %>% 
+  select(-sample) 
+   
+pal_all_summary <- tail_lens %>% 
+  mutate(sample = "all", 
+         rep = "all") %>% 
+  group_by(sample, timepoint, rep, rname) %>%
+  summarize(median_tail_len = median(tail_length, na.rm = TRUE),
+             n_reads = n(),
+            gene_name = unique(gene_name)) %>% 
+  ungroup()  %>% 
+  filter(n_reads >= 10) %>% 
+  select(-sample)
+
+pal_all_summary_full <- bind_rows(pal_sample_summary, pal_all_summary)
+pal_all_summary <- select(pal_all_summary_full,-n_reads)
+```
+
+
+```{r, eval = FALSE}
+library(eulerr)
+detected_tx <- split(pal_all_summary, 
+      pal_all_summary$rep) %>%
+  map(., ~split(.x, 
+                .x$timepoint) %>%
+        map(~pull(.x, rname))) 
+
+plts <- imap(detected_tx, 
+    ~euler(.x) %>% 
+      plot(., 
+           quantities = TRUE,
+           fills = col_pal[1:2],
+           main = str_c("replicate ", .y)))
+
+
+pdf(file.path(fig_dir, "pal_overlap_timepoints.pdf"),
+    height = 9, width = 7)
+gridExtra::grid.arrange(plts[[1]], plts[[2]], plts[[3]], 
+                        ncol= 1)
+dev.off()
+```
+
+```{r, eval = FALSE}
+pal_all_tpt_summary_wide <- pal_all_summary %>% 
+  pivot_wider(names_from = timepoint, 
+              values_from = median_tail_len) %>% 
+  filter(rep == "all")
+
+plt_stats <- pal_all_tpt_summary_wide %>% 
+  na.omit() %>% 
+  mutate(x = 0.8 * max(`0-1`, na.rm = T),
+         y = 0.8 * max(`4-5`, na.rm = T)) %>% 
+  group_by(rep, x, y) %>% 
+  summarize(n = str_c("n = ", scales::comma(n())),
+            r = str_c("r = ", signif(cor(`0-1`, `4-5`, method = "spearman", use = "pairwise.complete.obs"), 2)),
+            lab = str_c(n, r, sep = "\n"))
+
+p <- ggplot(pal_all_tpt_summary_wide, aes(`0-1`, `4-5`)) + 
+    geom_point(size = 0.1, alpha = 0.25) + 
+    facet_wrap(~rep, nrow = 1) +
+    coord_equal() +
+    labs(x = "Poly(A) tail length 0-1 hour ",
+         y = "Poly(A) tail length 4-5 hour") +
+    geom_text(data = plt_stats, aes(x = x, y = y, label = lab))
+    
+save_plot(file.path(fig_dir, "polyA_tail_lens_across_timepoints_10reads.pdf"),
+          p,
+          nrow = 1,
+          ncol = 1, 
+          base_asp = 1.5)
+p
+```
+
+```{r, eval = FALSE}
+pal_all_summary_wide <- pal_all_summary %>% 
+  pivot_wider(names_from = rep, 
+              values_from = median_tail_len) 
+
+plt_stats <- pal_all_summary_wide %>% 
+  na.omit() %>% 
+  mutate(x = 0.8 * max(`1`, na.rm = T),
+         y = 0.8 * max(`2`, na.rm = T)) %>% 
+  group_by(timepoint, x, y) %>% 
+  summarize(n = str_c("n = ", scales::comma(n())),
+            r = str_c("r = ", signif(cor(`1`, `2`, method = "spearman", use = "pairwise.complete.obs"), 2)),
+            lab = str_c(n, r, sep = "\n"))
+
+p <- ggplot(pal_all_summary_wide, aes(`1`, `2`)) + 
+    geom_point(size = 0.1, alpha = 0.25) + 
+    facet_wrap(~timepoint, nrow = 1) +
+    coord_equal() +
+    labs(x = "Poly(A) tail length (rep 1)",
+         y = "Poly(A) tail length (rep 2)") +
+    geom_text(data = plt_stats, aes(x = x, y = y, label = lab))
+    
+save_plot(file.path(fig_dir, "polyA_tail_lens_per_rep_10reads.pdf"),
+          p,
+          nrow = 1,
+          ncol = 2, 
+          base_asp = 1.5)
+p
+```
+
+
+```{r, eval = FALSE}
+plt_dat <- pal_all_summary_wide %>% 
+  na.omit() %>% 
+  select(-gene_name) %>% 
+  pivot_longer(cols = -c(rname, timepoint),
+               names_to = "rep",
+               values_to = "tail_lengths") 
+  
+plt_stats <- plt_dat %>% 
+  na.omit() %>% 
+  group_by(timepoint, rep) %>% 
+  summarize(y = median(tail_lengths, na.rm = T))
+
+p <-  ggplot(plt_dat, aes(timepoint, tail_lengths)) + 
+    geom_violin(aes(fill = timepoint)) +
+    scale_fill_manual(values = col_pal) + 
+    facet_wrap(~rep, nrow = 1) +
+    labs(x = "",
+         y = "Poly(A) tail length",
+         fill = "") +
+    theme(legend.position = "none")
+
+save_plot(file.path(fig_dir, "polyA_tail_lens_violin_10reads.pdf"),
+          p,
+          nrow = 1,
+          ncol = 2, 
+          base_asp = 1.5)
+p
+```
+
+```{r, eval = FALSE}
+p <- filter(plt_dat, rep == "all") %>% 
+ ggplot(aes(timepoint, tail_lengths)) + 
+    geom_violin(aes(fill = timepoint)) +
+    scale_fill_manual(values = col_pal) + 
+    facet_wrap(~rep, nrow = 1) +
+    labs(x = "",
+         y = "Poly(A) tail length",
+         fill = "") +
+    theme(legend.position = "none")
+
+save_plot(file.path(fig_dir, "polyA_tail_lens_all_violin_10reads.pdf"),
+          p,
+          nrow = 1,
+          ncol = 1, 
+          base_asp = 1.1)
+p
+```
+
+```{r, eval = FALSE}
+pal_df <- pal_all_summary_wide %>% 
+  select(timepoint, rname, gene_name, all) %>% 
+  pivot_wider(names_from = timepoint, values_from = all) %>% 
+  na.omit() %>% 
+  mutate(pal_log2fc = log2(`4-5`) - log2(`0-1`)) %>% 
+  dplyr::rename(tx_id = rname)
+
+expr_data <- read_tsv(file.path("..",
+                                    "2020-05-24",
+                                    "output_files",
+                                    "all_tx_analysis.tsv.gz")) %>% 
+  filter(count_type == "exon") 
+
+te <- read_tsv("../old_analyses/2019-11-21_rpfs/transcript_level_log2_te.tsv.gz") %>%  
+  dplyr::select(-transcript_id) %>% 
+  dplyr::rename(tx_id = representative_cds_transcript) %>% 
+  distinct()  %>% 
+  column_to_rownames("tx_id") %>% 
+  .[!rowSums(.) == 0, ] %>% 
+  .[!rowSums(is.na(.)) == ncol(.), ] %>% 
+  rownames_to_column("tx_id")
+
+combined_df <- Reduce(function(x, y) inner_join(x, y, by = "tx_id"),
+                      list(pal_df, expr_data, te))
+
+```
+
+```{r, eval = FALSE}
+p1 <- ggplot(combined_df, aes(`0-1`, `0-1_h`)) + 
+  geom_point(size = 0.1) +
+  labs(x = "Poly(A) tail length (0-1hr)",
+       y = expr(paste("log"[2]," TE (0-1hr)")))
+
+p2 <- ggplot(combined_df, aes(`4-5`, `3-4_h`)) + 
+  geom_point(size = 0.1) +
+  labs(x = "Poly(A) tail length (4-5hr)",
+       y = expr(paste("log"[2]," TE (3-4hr)")))
+
+p3 <- ggplot(combined_df, aes(pal_log2fc, log2_te)) + 
+  geom_point(size = 0.1) +
+  labs(x = expr(paste("log"[2], " Poly(A) tail length (4-5hr/0-1hr)")),
+       y = expr(paste("log"[2]," TE (3-4hr/0-1hr)")))
+p <- plot_grid(p1, p2, p3, nrow = 1)
+
+save_plot(file.path(fig_dir, "polyA_tail_v_te_10reads.pdf"),
+          p,
+          nrow = 1,
+          ncol = 3, 
+          base_asp = 1.0)
+p
+```
+### Compare poly(A) tails to PAL-Seq
+
+```{r, eval = FALSE}
+# supplemental table 2 from https://dx.doi.org/10.7554%2FeLife.16955
+ 
+if(!file.exists("extdata/sup_tbl_2.xlsx")){
+  dir.create("extdata", showWarnings = FALSE)
+  tbl_url <- "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4988829/bin/elife-16955-supp2.xlsx"
+  download.file(tbl_url, "extdata/sup_tbl_2.xlsx")
+}
+
+library(readxl)
+to_keep <- excel_sheets("extdata/sup_tbl_2.xlsx") %>% 
+  .[1:9]
+names(to_keep) <- to_keep
+pal_dat <- map_dfr(to_keep, ~read_excel("extdata/sup_tbl_2.xlsx", 
+                            sheet = .x,
+                            skip = 3), 
+        .id = "stage") %>% 
+  mutate(`Mean poly(A)-tail length` = as.numeric(`Mean poly(A)-tail length`),
+         `Excluded from analysis` = `Excluded from analysis` == "Yes",
+         `Passing poly(A)-tag cutoff (>=100 tags)` = `Passing poly(A)-tag cutoff (>=100 tags)` == "Yes") %>% 
+  filter(`Passing poly(A)-tag cutoff (>=100 tags)`,
+         !`Excluded from analysis`) %>% 
+  mutate(stage = case_when(
+    stage == "0-1 h embryos wt" ~ "0-1 vs. 0-1 hr",
+    stage == "5-6 h embryos wt" ~ "4-5 vs. 5-6 hr",
+    stage == "3-4 h embryos wt" ~ "4-5 vs. 3-4 hr",
+    TRUE ~ stage
+  ))
+
+
+pal_data_comp <- pal_all_summary_wide %>% 
+  mutate(stage = case_when(
+    timepoint == "0-1" ~ "0-1 vs. 0-1 hr",
+    timepoint == "4-5" ~ "4-5 vs. 5-6 hr"
+  ),
+  `Mean poly(A)-tail length` = (`1` + `2`) / 2) %>% 
+  group_by(stage, gene_name) %>% 
+  summarize(`Mean ONT poly(A)-tail length` = mean(`Mean poly(A)-tail length`)) 
+
+# duplicate 4-5 hour to compare also to 3-4 hour from publication
+
+pal_data_comp <- filter(pal_data_comp, 
+                        stage == "4-5 vs. 5-6 hr") %>% 
+  mutate(stage = "4-5 vs. 3-4 hr") %>% 
+  bind_rows(pal_data_comp)
+
+pal_data_comp <- left_join(pal_data_comp, pal_dat, by = c("gene_name" = "Gene name",
+                            "stage")) %>% 
+  na.omit()
+```
+
+```{r, eval = FALSE}
+library(ggpubr)
+p <- ggplot(pal_data_comp, aes(`Mean ONT poly(A)-tail length`, 
+                          `Mean poly(A)-tail length`)) + 
+  geom_point(size = 0.1) + 
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_equal() + 
+  stat_regline_equation(label.y = max(pal_data_comp$`Mean poly(A)-tail length`), aes(label = ..rr.label..)) + 
+  labs(x = "Poly(A) tail length (ONT Direct RNA-Seq)",
+       y = "Poly(A) tail length (PAL-Seq)") +
+  facet_wrap(~stage)
+
+p
+
+save_plot(file.path(fig_dir, "pal-seq_v_ont-tail-lens.pdf"),
+          p,
+          nrow = 1,
+          ncol = 3, 
+          base_asp = 1.0)
+
+
+```
+
+### Expression versus poly(A) tail length
+```{r, eval = FALSE}
+pal_combined_summary_full <- pal_all_summary_full %>% filter(rep == "all")
+
+pal_combined_summary_full <- tx_summary %>% 
+  separate(sample, into = c("timepoint", "tmp", "rep"), sep = "_") %>% 
+  select(-tmp) %>% 
+  group_by(timepoint, tx) %>% 
+  summarize(mean_counts = mean(ont_counts)) %>% 
+  left_join(pal_combined_summary_full, ., by = c("rname" = "tx", "timepoint")) %>%
+  filter(mean_counts > 5)
+
+
+plt_stats <- pal_combined_summary_full %>% 
+  na.omit() %>% 
+  mutate(x = 0.6 * max(mean_counts, na.rm = T),
+         y = 0.6 * max(median_tail_len, na.rm = T)) %>% 
+  group_by(timepoint, x, y) %>% 
+  summarize(n = str_c("n = ", scales::comma(n())),
+            r = str_c("r = ", signif(cor(log10(mean_counts), median_tail_len, method = "spearman", use = "pairwise.complete.obs"), 2)),
+            lab = str_c(n, r, sep = "\n"))
+
+p <- pal_combined_summary_full %>% 
+  ggplot(., aes(mean_counts, median_tail_len)) +
+  geom_point(alpha = 0.2, size = 0.1) +
+  geom_smooth(method = "lm", color = "black", se = FALSE) + 
+  geom_text(data = plt_stats, aes(x = x, y = y, label = lab)) + 
+  scale_x_log10(labels = scales::comma) + 
+  facet_wrap(~timepoint) +
+  labs(x = "Mean transcript counts",
+       y = "Poly(A) tail length")
+
+save_plot(file.path(fig_dir, "polyA_tail_v_tx_counts.pdf"),
+          p,
+          nrow = 1,
+          ncol = 2, 
+          base_asp = 1.0)
+
+p
+```
+## Poly(A) tails on transcript classes
+
+```{r, eval = FALSE}
+# derenzis genes
+renzis_zyg_genes <- read_delim(file.path(project_dir, "docs",
+                                   "renzis_all_zygotic.txt"),
+                           delim = " ", 
+                           col_names = FALSE)
+
+renzis_early_genes <- read_delim(file.path(project_dir, "docs",
+                                   "renzis_early_zygotic.txt"),
+                           delim = " ", col_names = FALSE, skip = 1)
+
+renzis_mzt_genes <- read_delim(file.path(project_dir, "docs",
+                                   "renzis_mzt.txt"),
+                           delim = " ", col_names = FALSE, skip = 1)
+
+
+# eisen genes
+
+if(!file.exists(file.path(project_dir, 
+                        "docs", 
+                        "eisen_data.tsv"))) {
+  download.file("https://ndownloader.figshare.com/files/400050",
+                file.path(project_dir, 
+                          "docs", 
+                          "eisen_data.tsv"))
+}
+
+edata <- read_tsv(file.path(project_dir, 
+                        "docs", 
+                        "eisen_data.tsv"))
+
+gtf_dat <- tidy_gtf(annots$drosophila$gtf)
+
+genename2id <- filter(gtf_dat, type == "gene") %>% 
+  dplyr::select(gene_name, gene_id) %>% 
+  unique()
+edata_genes <- dplyr::select(edata, NAME, CLASS) %>% 
+  left_join(genename2id, by = c("NAME" = "gene_name")) %>% 
+  na.omit() %>% 
+  split(., .$CLASS)
+
+bartel_zyg <- read_excel("../../docs/bartel_2019_s1.xlsx", skip = 2) %>% 
+  left_join(gtf_dat, by = c("GENES" = "gene_name")) %>% 
+  pull(GENES) %>% 
+  unique()
+
+public_gene_sets <- list(
+  derenzis_early_zygotic = renzis_early_genes$X3,
+  derenzis_pure_zygotic = renzis_zyg_genes$X3,
+  derenzis_mat_zygotic = renzis_mzt_genes$X3,
+  derenzis_any_zygotic = union(renzis_zyg_genes$X3,
+                                   renzis_mzt_genes$X3),
+  eisen_pure_zygotic = edata_genes$zyg$NAME,
+  eisen_mat_zygotic = edata_genes$matzyg$NAME,
+  eisen_any_zygotic = union(edata_genes$zyg$NAME, 
+                                edata_genes$matzyg$NAME),
+  eisen_pure_mat = edata_genes$mat$NAME,
+  bartel_zyg = bartel_zyg
+) %>% 
+  map(na.omit)
+
+gene_classes <- read_tsv(file.path("..", "2021-06-publication", "processed_files", "eisa_bt2_gene_classes.tsv")) %>% 
+  split(., .$mzt_class)
+
+pretty_class_labels <- c(
+  "pure_maternal" = "Maternal",
+  "mat_zyg_combined" = "Maternal + Zygotic",
+  "pure_zygotic_combined" = "Zygotic"
+)
+our_gene_sets <- map(gene_classes[names(pretty_class_labels)], pull, "gene_name")
+names(our_gene_sets) <- pretty_class_labels
+all_gene_sets <- c(public_gene_sets, 
+                   our_gene_sets)
+
+          
+```
+
+```{r, eval = FALSE}
+pal_all_tpt_summary_wide <- pal_all_summary %>% 
+  pivot_wider(names_from = timepoint, 
+              values_from = median_tail_len) %>% 
+  filter(rep == "all")
+
+pal_all_tpt_summary_wide_classes <- imap_dfr(our_gene_sets[c("Maternal", "Maternal + Zygotic")], 
+                                         ~inner_join(tibble(gene_name = .x, 
+                                                            class = .y),
+                                                     pal_all_tpt_summary_wide, 
+                                                     by = "gene_name")) %>% 
+  group_by(gene_name, class) %>% 
+  summarize(`0-1` = median(`0-1`),
+            `4-5` = median(`4-5`)) %>% 
+  ungroup()
+
+plt_stats <- pal_all_tpt_summary_wide_classes %>% 
+  na.omit() %>% 
+  mutate(x = 0.8 * max(`0-1`, na.rm = T),
+         y = 0.8 * max(`4-5`, na.rm = T)) %>% 
+  group_by(class, x, y) %>% 
+  summarize(n = str_c("n = ", scales::comma(n())),
+            r = str_c("r = ", signif(cor(`0-1`, `4-5`, method = "pearson", use = "pairwise.complete.obs"), 2)),
+            lab = str_c(n, r, sep = "\n"))
+
+p <- ggplot(pal_all_tpt_summary_wide_classes, aes(`0-1`, `4-5`)) + 
+    geom_point(size = 0.1, alpha = 0.25) + 
+  geom_smooth(method = "lm", se = F) +
+  stat_cor(label.x = 80, label.y = 140) +
+  stat_regline_equation(label.x = 80, label.y = 130) + 
+    facet_wrap(~class) +
+    coord_equal() +
+    labs(x = "Poly(A) tail length 0-1 hour ",
+         y = "Poly(A) tail length 4-5 hour") 
+ #   geom_text(data = plt_stats, aes(x = x, y = y, label = lab))
+  
+p
+save_plot(file.path(fig_dir, "polyA_tail_lens_mat_vs_zyg.pdf"),
+          p,
+          nrow = 1,
+          ncol = 2,
+          base_asp = 1.1)
+p
+
+```
+
+
+```{r, eval = FALSE}
+
+p <- imap_dfr(our_gene_sets, 
+                                         ~inner_join(tibble(gene_name = .x, 
+                                                            class = .y),
+                                                     pal_all_summary_wide, 
+                                                     by = "gene_name")) %>% 
+  select(-`1`, -`2`) %>% 
+  distinct() %>% 
+  ggplot(aes(timepoint, all)) +
+  geom_violin(aes(fill =timepoint)) +
+  geom_jitter(size = 0.01, alpha = 0.2) + 
+  facet_wrap(~class) +
+  scale_fill_manual(values = col_pal) +
+  theme(legend.position = 'none') +
+  labs(y = "Poly(A) tail length")
+p
+
+save_plot(file.path(fig_dir, "mzt_classes_polya_tails.pdf"),
+          p,
+          base_asp = 1,
+          nrow = 1,
+          ncol = 2)
+```
+
+
+
+## Examine poly(A) tails on switch isos
+
+```{r, eval = FALSE}
+select(switch_isos, gene_id, gene_name, transcript_id, transcript_type) %>% 
+  left_join(pal_all_summary_wide, 
+            by = c("transcript_id" = "rname", "gene_name")) %>% 
+  select(-`1`, -`2`) %>% 
+  filter(!is.na(all)) %>% 
+  distinct() %>% 
+  group_by(gene_id) %>% 
+  mutate(n = n()) %>% 
+  filter(n >= 4) %>%
+  ggplot(aes(timepoint, all)) +
+  geom_violin(aes(fill =transcript_type))
+```
+```{r, eval = FALSE}
+plt_dat <- select(switch_isos, gene_id, gene_name, transcript_id, transcript_type) %>% 
+  left_join(select(pal_all_tpt_summary_wide, -rep),
+            by = c("transcript_id" = "rname", "gene_name")) %>% 
+  pivot_longer(cols = -c(gene_id,gene_name,transcript_id, transcript_type),
+               names_to = "timepoint",
+               values_to = "tail_len") %>% 
+  pivot_wider(id_cols = c(gene_name, timepoint), 
+              names_from = transcript_type,
+              values_from = tail_len,
+              values_fill = NA,
+              values_fn = unique)
+
+
+p <- ggplot(plt_dat, aes(maternal, zygotic)) + 
+    geom_point(size = 0.5) + 
+    facet_wrap(~timepoint) +
+    geom_abline(slope = 1, intercept = 0, linetype = 'dashed') + 
+    coord_equal() +
+    labs(x = "Maternal Poly(A) tail length",
+         y = "Zygotic Poly(A) tail length") 
+ #   geom_text(data = plt_stats, aes(x = x, y = y, label = lab))
+  
+p
+save_plot(file.path(fig_dir, "polyA_tail_lens_switch_isos_mat_vs_zyg.pdf"),
+          p,
+          nrow = 1,
+          ncol = 2,
+          base_asp = 1.1)
+p
+```
+
+## Representative transcripts
+
+```{r, eval = FALSE}
+#' Plot tx coverage
+#' 
+#' @param bams
+#' @param features
+#' @param gtf_obj
+
+plot_ont_tx_coverage <- function(bw_fns, 
+                                 ont_fns,
+                             transcripts,
+                             gtf_obj,
+                             scale_y = FALSE,
+                             gnome = "dm6",
+                             annotation_label = NULL,
+                             ...){
+  library(GenomicFeatures)
+  library(Gviz)
+  library(GenomicAlignments)
+  
+  options(ucscChromosomeNames=FALSE)
+
+  #subset gtf to get min max coords to plot
+  gfeatures <- gtf_to_gviz(gtf_obj, transcripts)
+  
+  chrom <- as.vector(unique(gfeatures$chromosome))[1]
+  start <- min(gfeatures$start)
+  end <- max(gfeatures$end)
+  strand <- as.vector(unique(gfeatures$strand))[1]
+  
+  # get coverage
+  cov_list <- map(bw_fns, 
+      ~get_bw(.x,
+             chrom = chrom,
+             start = start,
+             end = end) %>% 
+        makeGRangesFromDataFrame(., 
+                                 keep.extra.columns = TRUE,
+                                 seqnames.field = 'contig',
+                                 starts.in.df.are.0based = TRUE,
+                                 ignore.strand = TRUE))
+  
+  if(scale_y){
+    ymax <- map(cov_list, ~.x$coverage) %>% unlist() %>% max()
+    y_limits <- c(0, ymax)
+  } else {
+    y_limits <- NULL
+  }
+  
+  lib_names <- names(bw_fns)
+  
+  if(is.null(lib_names)){
+    lib_names <- as.character(1:length(bw_fns))
+  } 
+  names(cov_list) <- lib_names 
+  
+  dtracks <- pmap(list(cov_list,
+                       names(cov_list),
+                       viridis(length(cov_list))),
+                  function(x, y, z){
+                    DataTrack(range = x, 
+                              name =  as.character(y),
+                              chromosome = chrom, 
+                              genome = gnome,
+                              col.line = z,
+                              ylim = y_limits
+                    )})
+  
+  grtrack <- GeneRegionTrack(gfeatures,
+                             genome = gnome, 
+                             chromosome=chrom, 
+                             name="",
+                          #   stacking = "dense",
+                             col.title = "black")
+  options(scipen=16)
+  if(is.null(annotation_label)){
+    annotation_label <- unique(gfeatures$symbol)[1]
+  }
+  plotTracks(c(list(grtrack), 
+               dtracks),
+             chromosome = chrom,
+             from = start,
+             to = end,
+             type = "S",
+             reverseStrand = strand == "-", 
+             col.title = "black",
+             col.axis = "black",
+             background.title ="transparent",
+             lwd = 1.0, 
+             innerMargin = 10,
+             margin = 50,
+             main = annotation_label,
+             ...)
+
+}
+```
+
+Show coverage profiles from transcripts that swtich
+```{r, eval = FALSE}
+additional_annots <- read_tsv(file.path("../2020-05-24/output_files/all_annotations2020-05-28.tsv"))
+base_url <- "http://amc-sandbox.ucdenver.edu/User33/rissland/bws/"
+sras <- filter(mdata, strain == "w1118") %>% pull(Run)
+ids <- filter(mdata, strain == "w1118") %>% pull(developmental_stage)
+
+bws <- c("_fwd.bw", "_rev.bw")
+names(bws) <- c("+", "-")
+
+bw_fns <- map(bws, function(x) {
+  out <- paste0(base_url, sras, x)
+  names(out) <- ids
+  out
+}) 
+
+
+gtf_obj <- import(annots$drosophila$gtf)
+
+tx_summary_plots <- function(bws, 
+                             gene,
+                             isoform_annotation_df,
+                             ...){
+  
+  to_plot <- filter(additional_annots, gene_name == gene)
+  strand <- unique(to_plot$strand)[1]
+
+  features <- unique(to_plot$featureID)
+  plot_tx_coverage(bw_fns[[strand]], 
+                 features,
+                 gtf_obj,
+                 scale_y = FALSE,
+                 cex.main = 0.75,
+                 rotation.title=0,
+                 ...
+                 )
+}
+
+to_plot <- c("l(2)k09913",
+  "PNUTS",
+  "cnn",
+  "Zn72D",
+  "Rb97D",
+  "pyd",
+  "CG8331",
+  "Pk92B",
+  "yata",
+  "hts",
+  "bl",
+  "eIF-2gamma",
+  "Npc1a",
+  "Su(var)2-10",
+  "toc",
+  "Hph",
+  "blot",
+  "Mhcl",
+  "SC35",
+  "CG4658",
+  "arm",
+  "Nmnat",
+  "Adar",
+  "Plip",
+  "lola")
+
+tx_figs <- file.path(fig_dir, "tx_figs")
+dir.create(tx_figs, showWarnings = FALSE)
+
+
+walk(to_plot,
+    ~{
+      pdf(file.path(tx_figs,
+                    str_c(.x, "_tx_coverage.pdf")),
+          width = 6,
+          height = 3)
+      tx_summary_plots(bw_fns, gene = .x, 
+                 isoform_annotation_df = additional_annots,
+                 title.width = 1.5,
+                 sizes = c(0.1, rep(0.25, 5)),
+                 fontsize = 8,
+                 cex.title = 1)
+      dev.off()
+    })
+
+```

@@ -2,13 +2,8 @@
 """ rules for star mapping """
 
 def _star_fq_types(wildcards):
-  """ lookup global dictionary LIB_MAP via sample
-      and lookup fastq suffixes
-  """
-  id = os.path.basename(wildcards.sample)
-  if id in LIB_MAP:
-     lib_attrs = LIB_MAP[id]
-     fq_types = config[lib_attrs]["fq"]
+  try:
+     fq_types = CMD_CONFIG["fq"]
      
      if len(fq_types) == 1:
        suffixes = [""]
@@ -17,11 +12,9 @@ def _star_fq_types(wildcards):
      fq_names = [path.join(wildcards.data,
                            "fastq",
                            "trimmed",
-                           wildcards.species, 
-                           wildcards.expt,
                            wildcards.sample + x + "_trimmed.fastq.gz") for
                            x in suffixes]
-  else:
+  except:
      sys.exit("no fastq suffixes found for library: {}".format(id))
   return fq_names
 
@@ -30,21 +23,21 @@ def _fqlist_to_str(wildcards):
     return " ".join(fqs)
 
 rule star_align:
-    """ map reads to genome/transcriptome using STAR 
+    """ map reads to genome using STAR 
     """
     input:
-      _star_fq_types, 
-      idx_dummy_file = path.join("{data}", "star", "logs", "{species}_index_tracking.txt"), 
+      _star_fq_types,
+      idx_dummy_file = path.join("{data}", "logs", "star", "index_tracking.txt"),
     output:
-      bam = "{data}/star/{species}/{expt}/{sample}/{sample}_sorted.bam",
-      bai = "{data}/star/{species}/{expt}/{sample}/{sample}_sorted.bam.bai",
+      bam = "{data}/star/{sample}/{sample}_sorted.bam",
+      bai = "{data}/star/{sample}/{sample}_sorted.bam.bai",
     params:
-      tmpbam = "{data}/star/{species}/{expt}/{sample}/{sample}_Aligned.out.bam",
-      genome = lambda wildcards: GENOME_DIRS[wildcards.species],
+      tmpbam = "{data}/star/{sample}/{sample}_Aligned.out.bam",
+      genome = GENOME_DIR,
       io = _fqlist_to_str, 
-      out = "{data}/star/{species}/{expt}/{sample}/{sample}_",
+      out = "{data}/star/{sample}/{sample}_",
     log:
-      "{data}/star/logs/{species}/{expt}/{sample}_align.txt"
+      "{data}/logs/star/{sample}_align.txt"
     message:
       "running star alignments "
     threads:
@@ -79,15 +72,15 @@ rule star_align:
 
 rule star_idx:
   input:
-    lambda wildcards: GENOMES[wildcards.species]
+    GENOME
   output:
-    path.join("{data}", "star", "logs", "{species}_index_tracking.txt"), 
+    path.join("{data}", "logs", "star", "index_tracking.txt"), 
   params:
-    genome_dir = lambda wildcards: GENOME_DIRS[wildcards.species],
-    genome = lambda wildcards: GENOMES[wildcards.species],
-    transcripts = lambda wildcards: TRANSCRIPTS[wildcards.species],
+    genome_dir = GENOME_DIR,
+    genome = GENOME,
+    transcripts = TRANSCRIPTS,
   log:
-    path.join("{data}", "star", "logs", "{species}_idx.txt")
+    path.join("{data}", "logs", "star", "idx.txt")
   message:
     "building star index "
   threads:

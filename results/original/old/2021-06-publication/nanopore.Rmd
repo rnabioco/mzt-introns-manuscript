@@ -1,0 +1,459 @@
+---
+title: "Long-read characterization of the MZT in Drosophila"
+author: "Kent Riemondy RBI"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, message = FALSE)
+source(here::here("R/globals.r"))
+library(Rsamtools)
+```
+
+
+
+RNA was collected from 0-1 hour or 4-5 hour *Drosophila* embryos and sequenced using direct RNA sequencing on the oxford nanopore technologies (ONT) platform.
+
+## Goals:
+
+- Examine isoforms in the maternal transcriptome and post major-wave of the MZT. Compare to isoforms detected by short read sequencing that have evidence of switching during the MZT. 
+. 
+
+## Isoform characterization:
+
+- Nanopore reads were rebasecalled offline using guppy (necessary for calling polyA tails).
+- reads were aligned to either the transcriptome or genome (splice-aligned) using minimap2 with appropriate settings
+
+- transcripts were quantified with salmon using the transcriptome alignments 
+
+```{r}
+fig_dir <- file.path("figs_ont")
+dir.create(fig_dir, showWarnings = FALSE)
+out_dir <- "output_files"
+dir.create(out_dir)
+col_pal <- scbp::palette_OkabeIto
+```
+
+### Library QC (transcript mapped)
+
+```{r, fig.cap="Summary of read alignments to the drosophila transcriptome (using minimap2) or to the yeast control RNA. Numbers at the base of each bar indicate total # of raw reads."}
+
+samples <- c(
+  "0-1_hr_1_rerun",
+  "0-1_hr_2_rerun",
+  "4-5_hr_1_rerun",
+  "4-5_hr_2_rerun"
+)
+
+bam_fns <- file.path(project_dir, 
+                     "data", 
+                     "ont",
+                     "sorted_alignments",
+                     str_c(samples, ".bam"))
+
+# from Rsamtools tutorial
+.unlist <- function (x) {
+  ## do.call(c, ...) coerces factor to integer, which is undesired
+  x1 <- x[[1L]]
+  if (is.factor(x1)) {
+    structure(unlist(x), class = "factor", levels = levels(x1))
+  } else {
+    do.call(c, x)
+  }
+}
+
+
+bam_align_summary <- function(bam_fn,
+                              fields = c("qname", "flag", "rname")){
+  params <- ScanBamParam(what = fields)
+  bam <- scanBam(bam_fn, 
+               param = params)
+  bam <- unname(bam) # names not useful in unlisted result
+  elts <- setNames(bamWhat(params), bamWhat(params))
+  lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
+  b <-  as_tibble(do.call("data.frame", lst)) 
+  n_reads <- length(unique(b$qname))
+  aligned <- filter(b,flag != 4)
+  n_fly_aligned <- pull(aligned, qname) %>% 
+    unique() %>% 
+    length()
+
+  percent_aligned <- 100 * (n_fly_aligned / n_reads)
+  
+  if(is.null(names(bam_fn))){
+    sample <- basename(bam_fn) %>% str_remove(".bam")
+  } else {
+    sample <- names(bam_fn)[1]
+  }
+  
+  tibble(sample, 
+         n_reads, 
+         n_fly_aligned, 
+         percent_aligned, 
+         bam_fn)
+}
+
+fly_alignments <- map_dfr(bam_fns, 
+                          bam_align_summary)
+
+genome_bam_fns <- file.path(project_dir, 
+                     "data", 
+                     "ont-genome",
+                     "sorted_alignments",
+                     str_c(samples, ".bam"))
+
+fly_genome_alignments <- map_dfr(genome_bam_fns, 
+                          bam_align_summary)
+
+fly_alignments <- bind_rows(
+  list(transcriptome_aligned = fly_alignments, 
+       genome_aligned = fly_genome_alignments),
+  .id = "type"
+)
+p <- fly_alignments %>% 
+  mutate(percent_not_aligned = 100 - percent_aligned) %>% 
+  select(-bam_fn) %>% 
+  pivot_longer(cols = -c(sample, type)) %>% 
+  filter(!name %in% c("n_fly_aligned", "n_reads")) %>% 
+  mutate(name = str_remove(name, "percent_") %>% 
+           str_to_title() %>% 
+           str_replace("_", " ")) %>% 
+  ggplot(aes(sample, value)) +
+    geom_col(aes(fill = name)) +
+    geom_text(data = fly_alignments %>% select(sample, n_reads),
+            aes(x = sample,
+                y = 10,
+                label = scales::comma(n_reads)),
+                angle = 90) +
+    facet_wrap(~type)+ 
+   scale_fill_manual(values = col_pal) +
+  labs(x = "Library",
+       y = "Percent of Reads",
+       fill = "") +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.5))
+p
+save_plot(file.path(fig_dir, "alignment-summary.pdf"), p,
+          base_asp = 2,
+          base_height = 5.25)
+```
+
+
+### Read lengths
+
+```{r, fig.cap="Read length distributions of reads that map to the drosophila transcriptome."}
+
+read_length_summary <- function(bam_fn, flags_to_exclude = c(4, 256, 272, 2048, 2064, 16)){
+  df <- GenomicAlignments::readGAlignments(bam_fn, 
+                                     param = ScanBamParam(what = c("qname", "flag"),
+                                     flag = scanBamFlag(isUnmappedQuery = FALSE))) %>% 
+    as.data.frame() %>% 
+    dplyr::rename(rname = seqnames,
+                  read_width = qwidth,
+                  read_align_width = width)
+  
+  df <- filter(df, rname != "YHR174W", !flag %in% flags_to_exclude)
+  # df <- group_by(df, qname) %>% summarize(read_width = max(read_width),
+  #                                         .groups = "drop")
+   if(is.null(names(bam_fn))){
+    df$sample <- basename(bam_fn) %>% str_remove(".bam")
+  } else {
+    df$sample <- names(bam_fn)[1]
+  }
+  select(df, sample, rname, qname, read_width, read_align_width)
+}
+  
+read_lengths <- map_dfr(bam_fns, read_length_summary) 
+
+read_lengths_summary <- group_by(read_lengths, sample) %>% 
+  summarize(median_vals = median(read_align_width), .groups = "drop")
+
+p <- ggplot(read_lengths, aes(x = read_width)) +
+  geom_histogram(bins = 100) +
+  geom_vline(data = read_lengths_summary,
+             aes(xintercept = median_vals),
+             linetype = "dashed",
+             color = 'blue') + 
+  facet_grid(sample ~ ., scale = "free_y") +
+  labs(x = "Read Length") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(strip.text = element_text(size= 8))
+
+p
+
+save_plot(file.path(fig_dir, "read_length_distribution.pdf"),
+          p,
+          base_height = 5,
+          base_asp = 1)
+
+p <- filter(read_lengths, 
+            read_width < 4000) %>% 
+  ggplot(., aes(x = read_width)) +
+  geom_histogram(bins = 100) +
+  geom_vline(data = read_lengths_summary,
+             aes(xintercept = median_vals),
+             linetype = "dashed",
+             color = 'blue') + 
+  facet_grid(sample ~ ., scale = "free_y") +
+  labs(x = "Read Length") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(strip.text = element_text(size= 8))
+
+p
+
+save_plot(file.path(fig_dir, "capped_read_length_distribution.pdf"),
+          p,
+          base_height = 5,
+          base_asp = 1)
+
+```
+
+```{r}
+read_lengths_summary
+```
+
+
+### Examine read length in relation to tx length  
+
+```{r}
+gtf_fn <- annots$drosophila$gtf
+gtf <- import(gtf_fn)
+gtf <- as.data.frame(gtf)
+
+tx_lengths <- gtf %>% 
+  filter(type == "exon") %>% 
+  group_by(transcript_id, gene_name) %>% 
+  summarize(tx_width = sum(width)) %>% 
+  as_tibble() %>% 
+  unique()
+
+read_length_stats <- read_lengths %>% 
+  left_join(tx_lengths, by = c("rname" = "transcript_id")) %>% 
+  mutate(tx_coverage = read_align_width / tx_width)
+
+p <- filter(read_length_stats, tx_width < 10000) %>%  
+ ggplot(., aes(tx_width, read_align_width)) +
+  geom_point(alpha = 0.05, size = 0.00001) +
+  facet_wrap(~sample, nrow = 1) +
+  labs(x = "Length of annotated transcript",
+       y = "Read length")
+p
+
+save_plot(file.path(fig_dir, "tx_vs_read_length_distribution.png"),
+          p,
+          base_asp = 1,
+          nrow = 1,
+          ncol = 4)
+
+
+p <- filter(read_length_stats, tx_width < 10000) %>%  
+ ggplot(., aes(tx_coverage)) +
+  geom_histogram(bins = 100) +
+  facet_wrap(~sample, scales = "free", nrow = 1) +
+  labs(x = "Proportion of transcript with coverage",
+       y = "# of reads")
+p
+
+save_plot(file.path(fig_dir, "tx_coverage_distribution.pdf"),
+          p,
+          base_asp = 1,
+          nrow = 1,
+          ncol = 4)
+```
+```{r}
+read_length_stats %>% 
+  filter(tx_coverage > 0.90) %>%
+  select(sample, qname) %>% 
+  split(., .$sample) %>% 
+  map(~pull(.x, qname)) %>% 
+  iwalk(~writeLines(.x, str_c(.y, "full_length_reads.txt")))
+
+read_length_stats %>% 
+  filter(tx_coverage > 0.90) %>% 
+  write_tsv(file.path(out_dir, "full_length_read_alignments.tsv"))
+
+mat_ont <- read_length_stats %>% 
+  filter(str_detect(sample, "0-1"))%>% 
+  mutate(sample = "0-1 hr")
+
+zyg_ont <- read_length_stats %>% 
+  filter(str_detect(sample, "4-5")) %>% 
+  mutate(sample = "4-5 hr")
+
+bind_rows(mat_ont, zyg_ont) %>% 
+  write_tsv(file.path(out_dir, "all_merged_read_alignments.tsv"))
+
+bind_rows(mat_ont, zyg_ont) %>% 
+  filter(tx_coverage > 0.90) %>% 
+  write_tsv(file.path(out_dir, "full_length_merged_read_alignments.tsv"))
+```
+
+## Transcripts detected 
+
+```{r}
+salmon_fns <- file.path(project_dir, 
+                        "data",
+                        "ont",
+                        "counts",
+                        str_c(samples, "_salmon"),
+                        "quant.sf")
+
+tx <- tximport(salmon_fns, 
+               type = "salmon",
+               txOut = TRUE)
+
+tx <- lapply(tx, function(x){
+  if(length(x) == 1){
+    return(x)
+  } 
+  x[rownames(x) != "YHR174W", ]
+})
+```
+
+```{r}
+tx_counts <- tx$counts
+colnames(tx_counts) <- samples
+tx_summary <- tx_counts %>% 
+  as.data.frame() %>% 
+  rownames_to_column("tx") %>% 
+  pivot_longer(cols = -tx,
+               names_to = "sample",
+               values_to = "ont_counts") %>% 
+  mutate(developmental_stage = str_remove(sample, "_[0-9].*$") %>% # match stage names with short read data
+           str_replace("_", " ") %>% 
+           str_c(., " embryo")) 
+  
+tpms <- tx$abundance
+colnames(tpms) <- samples
+tx_tpm_summary <- tpms %>% 
+  as.data.frame() %>% 
+  rownames_to_column("tx") %>% 
+  pivot_longer(cols = -tx,
+               names_to = "sample",
+               values_to = "ont_tpms") %>% 
+  mutate(developmental_stage = str_remove(sample, "_[0-9].*$") %>% # match stage names with short read data
+           str_replace("_", " ") %>% 
+           str_c(., " embryo")) 
+```
+
+```{r}
+tx_stats <- tx_summary %>% 
+  filter(ont_counts > 0) %>% 
+  dplyr::count(sample) %>% 
+  mutate(n = str_c("> 0 counts: ", n)) %>% 
+  mutate(x = 300,
+         y = 0.5)
+
+tx_stats <- tx_summary %>% 
+  filter(ont_counts > 0) %>% 
+  group_by(sample) %>% 
+  summarize(n = str_c(">0 counts: ", sum(ont_counts > 0), "\n",
+                      ">50 counts: ", sum(ont_counts > 50), "\n",
+                      ">500 counts: ", sum(ont_counts > 500))) %>% 
+  mutate(x = 300,
+         y = 0.33)
+
+p <- tx_summary %>% 
+  filter(ont_counts > 0, ont_counts < 500) %>% 
+  ggplot(aes(ont_counts)) + 
+  stat_ecdf() +
+  geom_vline(xintercept = 50,
+             linetype = "dashed",
+             color = 'blue') + 
+  geom_text(data = tx_stats, 
+            aes(x = x, y = y, label = n)) + 
+  
+  facet_wrap(~sample, nrow = 1) + 
+  labs(x = "ONT read counts per transcript",
+       y = "ECDF")
+
+save_plot(file.path(fig_dir, "ont_transcript_count_distribution.pdf"),
+          p,
+          nrow = 1,
+          ncol = 4, 
+          base_asp = 1)
+
+p
+```
+
+
+
+### Examine # of switching-isoforms detected in ONT data
+
+Table showing the # of transcripts that have altered isoform ratios pre and post-major-wave MZT based on illumina libraries, that are detectable by ONT sequencing. 
+```{r}
+switch_isos <- read_excel(file.path("output_files",
+                                    "isoform_summary.xlsx"),
+           sheet = 2) 
+  
+switch_isos_summary <- tx_summary %>% 
+  mutate(detected = ont_counts > 0) %>% 
+  group_by(developmental_stage, tx) %>% 
+  summarize(n_samples = sum(detected),
+            mean_counts = mean(ont_counts),
+            total_counts = sum(ont_counts),
+            .groups = "drop") %>% 
+  filter(n_samples >= 1) %>% 
+  select(developmental_stage, mean_counts, tx) %>% 
+  pivot_wider(names_from = "developmental_stage",
+              values_from = "mean_counts") %>% 
+  left_join(switch_isos, ., by = c("transcript_id"= "tx"))
+
+mutate(switch_isos_summary, 
+       `detected_0-1_hr` = ifelse(is.na(`0-1 hr embryo`),
+                                FALSE,
+                                `0-1 hr embryo` > 0),
+       `detected_4-5_hr` = ifelse(is.na(`4-5 hr embryo`),
+                                FALSE,
+                                `4-5 hr embryo` > 0)) %>% 
+  group_by(transcript_type,
+           `detected_0-1_hr`,
+           `detected_4-5_hr`) %>% 
+  summarize(`# of transcripts` = n()) %>% 
+  group_by(transcript_type) %>% 
+  mutate(percent = 100 * (`# of transcripts`  / sum(`# of transcripts`))) %>% 
+  arrange(desc(`# of transcripts`), 
+          .by_group = TRUE)
+```
+
+
+```{r}
+p <- mutate(switch_isos_summary, 
+       `detected_0-1_hr` = ifelse(is.na(`0-1 hr embryo`),
+                                FALSE,
+                                `0-1 hr embryo` > 0),
+       `detected_4-5_hr` = ifelse(is.na(`4-5 hr embryo`),
+                                FALSE,
+                                `4-5 hr embryo` > 0),
+       detected = `detected_0-1_hr` | `detected_4-5_hr` ) %>% 
+  group_by(transcript_type, detected) %>% 
+  summarize(`# of transcripts` = n()) %>% 
+  group_by(transcript_type) %>% 
+  mutate(percent = 100 * (`# of transcripts`  / sum(`# of transcripts`))) %>% 
+  arrange(desc(`# of transcripts`), 
+          .by_group = TRUE) %>% 
+  ggplot(aes(transcript_type, `# of transcripts`)) + 
+    geom_col(aes(fill = detected)) +
+    scale_fill_viridis_d(name = "Supported by\nnanopore reads") +
+  labs(x = "")
+
+p
+
+save_plot(file.path(out_dir, "nanopore_support.pdf"),
+          p,
+          base_asp = 1.2)
+
+save_plot("../figures/pdfs/fig4/nanopore_support.pdf",
+          p,
+          base_asp = 1.2)
+```
+

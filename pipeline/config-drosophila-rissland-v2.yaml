@@ -1,0 +1,84 @@
+# config for MZT intron quantification snakemake pipeline #
+
+RAWDATA:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/data/raw_data/drosophila/RISSLAND"
+# directory with fastqs and generated data
+DATA: 
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/data/rissland"
+
+# directory for output databases
+DBASES: 
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/rissland" 
+
+# genome fasta file
+GENOME:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/ext/Drosophila_melanogaster.BDGP6.dna.toplevel.fa"
+
+# transcript annotation in GTF format
+TRANSCRIPTS:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/ext/Drosophila_melanogaster.BDGP6.84.gtf"
+
+# intron annotation in SAF format (see results/00.Rmd to generate from
+# STAR alignments)
+# leave blank if traditional alignmnet approach not needed
+INTRONS:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/saf/fly_introns.saf"
+
+EXONS:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/saf/fly_exons.saf"
+
+# fasta index file
+CHROM_SIZES:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/ext/Drosophila_melanogaster.BDGP6.dna.toplevel.fa.fai"
+
+# Path to star index
+GENOME_DIR:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/star/BDGP6"
+
+# experiment specific settings
+# trim: settings for cutadapt
+# intron/exon_count: settings for featureCounts, only run if introns/exons
+# defined above
+# stranded: either forward of reverse
+# map: additional settings for salmon quantification
+# bt_map: additional settings for bowtie2 mapping  
+# fq: suffix for R1 and R2
+#
+CMDPARAMS:
+    trim: " -q 10 -a 'AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC' "
+    intron_count: " --minOverlap 10 -s 2 "
+    exon_count: " --fracOverlap 1 -s 2 "
+    salmon: " --fldMean 200 --fldSD 20 --libType 'SR' "
+    stranded: "reverse"
+    bowtie: ""
+    fq: 
+        - ".fastq.gz"
+
+# sample names that indicate samples from the earliest timepoint in the timecourse
+# (e.g. a zygote or other pre-ZGA sample). 
+T0_SAMPLES:
+    - "SRR5469986"
+    - "SRR5469998"
+
+# Path to file with library definitions
+LIB_PARAMS: "fly_rissland_lib_params.tsv"
+
+# directory for auxillary scripts
+SRC: 
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/src" 
+
+# directory for R scripts
+RSRC:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/R"
+
+SINGULARITY:
+    "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns/docker/mzt-introns.sif"
+
+#memory allocation (MB) for default rules, or higher memory processes
+MALLOC:
+    DEFAULT: "4096"
+    SALMON: "8192"
+    STAR: "36864"
+
+CLUSTER: 
+    "LSF"

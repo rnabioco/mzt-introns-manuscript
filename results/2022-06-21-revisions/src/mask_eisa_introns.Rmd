@@ -1,0 +1,162 @@
+---
+title: "Intron mask"
+author: "Kent Riemondy RBI"
+date: "12/26/2019"
+output: html_document
+---
+
+
+```{r, message = FALSE, warning = FALSE, include = FALSE}
+source(here::here("R/globals.r"))
+```
+
+## Generate expressed intron mask
+
+To define introns, all intronic mRNA regions with coverage in the pre-ZGA samples will be masked and excluded from the intronic set used for counting. 
+
+```{r coverage_tracks}
+mdata <- read_tsv(file.path(data_dir, "raw_data", "drosophila", 
+                             "RISSLAND", "GSE98106_run_info_geo.txt"))
+
+mdata <- dplyr::select(mdata,
+                       Run_s, 
+                       developmental_stage_s,
+                       rip_antibody_s,
+                       source_name_s,
+                       strain_s)
+
+# select relevant libs
+mdata <- dplyr::filter(mdata,
+                     source_name_s == "Embryo",
+                     strain_s %in% c("w1118", "eGFP-ME31B"),
+                     rip_antibody_s == "none") %>% 
+  dplyr::select(-rip_antibody_s) %>% 
+  filter(developmental_stage_s == "0-1 hr embryo")
+
+
+bws <- dir(file.path(data_dir,
+                     "bigwigs",
+                     "drosophila",
+                     "bt2",
+                     "eisa",
+                     "RISSLAND"), 
+           full.names = TRUE, 
+           pattern = ".bw")
+
+bws <- str_subset(bws, str_c(mdata$Run_s, 
+                              collapse = "|"))
+
+fwd_bws <- str_subset(bws, "fwd.bw")
+
+fwd_df <- map_dfr(fwd_bws,
+                  ~read_bigwig(.x, set_strand = "+")) 
+
+chunk_ivls <- function(df, n) {
+  chroms <- unique(df$chrom)
+  chrom_splits <- split(chroms, cut(seq_along(chroms), n, labels = FALSE))
+  map(chrom_splits, 
+      ~filter(df, chrom %in% .x))
+}
+
+library(doParallel)
+
+n_cores <- 7
+cl <- makeCluster(n_cores)  
+registerDoParallel(cl)  
+
+fwd_df <- foreach(i = chunk_ivls(fwd_df, n_cores),
+        .packages = c("valr"),
+        .combine = rbind
+        ) %dopar% {
+  bed_partition(i, score = sum(score))
+}
+
+stopCluster(cl)
+
+ivl_df <- mutate(fwd_df, strand = "+") %>% 
+                 dplyr::select(chrom:score, strand)
+
+saveRDS(ivl_df, "ivl_df_bt2.rds")
+ivl_df <- readRDS("ivl_df_bt2.rds")
+
+masked_ivls <- filter(ivl_df, score > 0) %>% 
+  group_by(strand) %>% 
+  bed_merge() %>% 
+  ungroup()
+
+```
+
+## Per transcript masking
+
+```{r}
+gtf_fn <- file.path(db_dir, "drosophila", "eisaR.gtf")
+gtf_tbl <- tidy_gtf(gtf_fn)
+
+exon_bed <- gtf_tbl %>% 
+     filter(type == "exon",
+            str_detect(ID, "-I[0-9]*$")) %>% 
+     dplyr::select(chrom, start, end, transcript_id, gene_id, score, strand)
+
+
+mask_df <- masked_ivls %>% 
+  filter(strand == "+") %>% 
+  group_by(strand)
+
+# convert to tx coords
+pre_mrna_bed <- exon_bed %>%
+  mutate(end = end - start,
+         start = 0,
+         chrom = transcript_id,
+         strand = "+") %>% 
+  group_by(strand)
+
+tx_coords <- bed_intersect(mask_df , pre_mrna_bed, 
+              suffix = c("", ".y")) %>% 
+  mutate(name = ".",
+         score = 0) %>% 
+  select(chrom, start, end, name, score, strand) %>% 
+  unique()
+ 
+# set some basic cutoffs for introns to include for quant
+to_drop <- bed_intersect(mask_df , pre_mrna_bed, 
+              suffix = c("", ".y")) %>% 
+  group_by(chrom) %>% 
+  summarize(masked_nts = sum(.overlap), 
+            total_nts = unique(end.y - start.y),
+            prop_masked = masked_nts / total_nts, 
+            unmasked_nts = total_nts - masked_nts) %>% 
+  filter(prop_masked > 0.80 |  unmasked_nts < 25)
+
+db_out <- tx_coords %>% 
+  dplyr::select(chrom,
+                start, 
+                end, 
+                name,
+                score,
+                strand) %>% 
+  bed_sort() %>% 
+  mutate_if(is.numeric, format, scientific = F)  %>% 
+  mutate_all(str_trim)
+
+write_tsv(db_out,
+          file.path(db_dir, "drosophila", "intron_mask", "fly_intron_mask_txcoords_eisa_bt2_align.bed"),
+ col_names = F)
+
+```
+
+Lastly, exclude transcripts marked as duplicates in original salmon index. These would not be masked by above procedure, and not may no longer be marked as duplicates due to masking the sequence. 
+
+```{r}
+dup_tx <- read_tsv("annotation_files/eisa/duplicated_seqs.tsv")
+
+chroms <- read_tsv("annotation_files/eisa/eisa.fa.fai",
+                   col_names = c("chrom", "size"),
+                   col_type = c("ci---"))
+
+chroms <- chroms %>% 
+  filter(!chrom %in% dup_tx$DuplicateRef,
+         !chrom %in% to_drop$chrom)
+
+write_lines(chroms$chrom, file.path("annotation_files", "eisa",
+                                    "eisa_unique_transcripts.tsv"))
+```

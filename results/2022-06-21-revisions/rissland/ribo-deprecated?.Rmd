@@ -1,0 +1,214 @@
+---
+title: "Riboprofiling"
+author: "Kent Riemondy RBI"
+date: "8/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libs}
+library(here)
+source(here("R/globals.r"))
+```
+
+```{r}
+mdata <- read_tsv(file.path(docs_dir, "updated_eichhorn_mdata.txt")) %>% 
+  mutate(stage = str_split(sample_title, "_") %>% 
+           map_chr(~str_c(.x[1:2], collapse = "_")),
+         gt = str_split(sample_title, "_") %>% 
+           map_chr(~.x[3]),
+         treatment = str_split(sample_title, "_") %>% 
+           map_chr(~.x[4]),
+         treatment = ifelse(treatment =="No",
+                            str_split(sample_title, "_") %>% 
+           map_chr(~str_c(.x[4:5], collapse = "_")),
+           treatment),
+         type = str_match(sample_title, "RPF|RNA|PAL")[, 1]) 
+
+mdata <- mdata %>% 
+  filter(type != "PAL",
+         gt == "wt")
+
+mdata <- mdata %>% 
+  arrange(sample_title, 
+          type)
+```
+
+
+```{r}
+rna_files <- file.path(data_dir,
+                            "salmon", 
+                            "drosophila",
+                            "EICHHORN",
+                            "ribosome_profiling_cds",
+                            filter(mdata, type == "RNA") %>%
+                         pull(run_accession),
+                            "quant.sf")
+
+rpf_files <- file.path(data_dir,
+                            "salmon", 
+                            "drosophila",
+                            "EICHHORN",
+                            "ribosome_profiling_cds",
+                            filter(mdata, type == "RPF") %>%
+                         pull(run_accession),
+                            "quant.sf")
+
+txirna <- tximport(rna_files,
+                type="salmon", 
+                txOut=TRUE,
+                countsFromAbundance="scaledTPM")
+
+txirpf <- tximport(rpf_files,
+                type="salmon", 
+                txOut=TRUE,
+                countsFromAbundance="scaledTPM")
+
+all(rownames(txirna$abundance) == rownames(txirpf$abundance))
+
+
+te <- txirpf$abundance / txirna$abundance
+
+out_col_names <- filter(mdata, type == "RNA") %>%
+                         pull(stage)
+
+colnames(te) <- out_col_names 
+
+te <- tibble::rownames_to_column(as.data.frame(te), "transcript_id")
+
+te <- dplyr::select(
+  te,
+  transcript_id,
+  Stage_11:Stage_14,
+  Activated_egg,
+  `0-1_h`:`5-6_h`
+)
+
+rpfs <- txirpf$abundance 
+colnames(rpfs) <- filter(mdata, type == "RNA") %>%
+                         pull(stage)
+
+rpfs <- rpfs %>% 
+  as.data.frame() %>% 
+  rownames_to_column("transcript_id") %>% 
+  dplyr::select(
+  transcript_id,
+  Stage_11:Stage_14,
+  Activated_egg,
+  `0-1_h`:`5-6_h`
+)
+```
+
+
+Get map of tx_ids not in tables due to having the same CDS
+```{r}
+dup_txs <- read_tsv("../../dbases/drosophila/salmon/ribosome_profiling_cds/duplicate_clusters.tsv")
+```
+
+
+Add additional rows for duplicate tx's
+
+```{r}
+dup_tes <- left_join(dup_txs, te, by = c("RetainedTxp" = "transcript_id")) %>% 
+  dplyr::select(transcript_id = DuplicateTxp,
+         representative_cds_transcript = RetainedTxp, 
+         everything())
+
+te <- mutate(te, 
+             representative_cds_transcript = transcript_id)
+
+te <- bind_rows(dup_tes, te)
+
+write_tsv(te, "transcript_level_te.tsv.gz")
+
+# also write out as log2 TE and log2 fold change 3-4 / 0-1
+# filter for mRNAs with reasonable counts 1 TPM in 1/3 of samples
+
+rna <- txirna$abundance[rowSums(txirna$abundance > 1) > (ncol(txirna$abundance) * 1/3), ]
+rpf <- txirpf$abundance[rowSums(txirpf$abundance > 1) > (ncol(txirpf$abundance) * 1/3), ]
+to_keep <- intersect(rownames(rpf), rownames(rna))
+
+te <- log2(rpf[to_keep, ] + 1 ) - log2(rna[to_keep, ] + 1)
+colnames(te) <- out_col_names 
+
+te <- tibble::rownames_to_column(as.data.frame(te), "transcript_id")
+
+te <- dplyr::select(
+  te,
+  transcript_id,
+  Stage_11:Stage_14,
+  Activated_egg,
+  `0-1_h`:`5-6_h`
+)
+
+dup_tes <- left_join(dup_txs, te, by = c("RetainedTxp" = "transcript_id")) %>% 
+  dplyr::select(transcript_id = DuplicateTxp,
+         representative_cds_transcript = RetainedTxp, 
+         everything())
+
+te <- mutate(te, 
+             representative_cds_transcript = transcript_id)
+
+te <- bind_rows(dup_tes, te)
+
+te <- mutate(te, log2_te = `3-4_h` - `0-1_h`)
+
+write_tsv(te, "transcript_level_log2_te.tsv.gz")
+
+
+dup_rpfs <- left_join(dup_txs, rpfs, by = c("RetainedTxp" = "transcript_id")) %>% 
+  dplyr::select(transcript_id = DuplicateTxp,
+         representative_cds_transcript = RetainedTxp, 
+         everything())
+
+rpfs <- mutate(rpfs, 
+             representative_cds_transcript = transcript_id)
+
+rpfs <- bind_rows(dup_rpfs, rpfs)
+
+write_tsv(rpfs, "transcript_level_rpfs.tsv.gz")
+
+```
+
+```{r}
+iso_annots <- read_tsv("output_files/all_isoform_annotations.tsv")
+
+iso_utr_changes <- iso_annots %>% 
+  filter(!same_CDS) 
+
+te_iso_changes <- iso_annots %>%
+  select(tx_class, featureID, gene_name) %>% 
+  left_join(te, by = c("featureID" = "transcript_id")) 
+
+#te_changes[is.na(te_changes)] <- 0
+te_iso_changes <- na.omit(te_iso_changes)
+sample_order <- dplyr::select(te, Stage_11:`5-6_h`) %>% 
+  colnames()
+  
+te_changes <- te_iso_changes %>% 
+  pivot_longer(cols = -(tx_class:representative_cds_transcript)) %>% 
+  mutate(sample = factor(name, levels = sample_order),
+         value = log2(value))
+
+ggplot(te_changes, aes(sample, value)) + 
+  geom_violin(aes(fill = tx_class), 
+              position = position_dodge()) +
+  labs(x = "",
+       y = "Translation Efficiency (log2)") +
+  scale_fill_brewer(palette = "Set1", 
+                    name = "") +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+  )
+```
+
+
+## R session info  
+
+```{r}
+sessioninfo::session_info()
+```

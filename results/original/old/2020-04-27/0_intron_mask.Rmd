@@ -1,0 +1,264 @@
+---
+title: "Intron mask"
+author: "Kent Riemondy RBI"
+date: "12/26/2019"
+output: html_document
+---
+
+
+```{r, message = FALSE, warning = FALSE, include = FALSE}
+source(here::here("R/globals.r"))
+```
+
+## Generate expressed intron mask
+
+To define introns, all intronic mRNA regions with coverage in the pre-ZGA samples will be masked and excluded from the intronic set used for counting. 
+
+```{r coverage_tracks}
+mdata <- read_tsv(file.path(data_dir, "raw_data", "drosophila", 
+                             "RISSLAND", "GSE98106_run_info_geo.txt"))
+
+mdata <- dplyr::select(mdata,
+                       Run_s, 
+                       developmental_stage_s,
+                       rip_antibody_s,
+                       source_name_s,
+                       strain_s)
+
+# select relevant libs
+mdata <- dplyr::filter(mdata,
+                     source_name_s == "Embryo",
+                     strain_s %in% c("w1118", "eGFP-ME31B"),
+                     rip_antibody_s == "none") %>% 
+  dplyr::select(-rip_antibody_s) %>% 
+  filter(developmental_stage_s == "0-1 hr embryo")
+
+
+bws <- dir(file.path(data_dir, "bigwigs", "drosophila", "salmon",
+                     "primary_transcripts_per_tx",
+                     "RISSLAND"), 
+           full.names = TRUE, 
+           pattern = ".bw")
+
+bws <- str_subset(bws, str_c(mdata$Run_s, 
+                              collapse = "|"))
+
+fwd_bws <- str_subset(bws, "fwd.bw")
+# rev_bws <- str_subset(bws, "rev.bw")
+
+# for now read in bedgraphs due to bug in deeptools
+fwd_df <- map_dfr(fwd_bws,
+                  ~read_bedgraph(.x) %>% 
+                    mutate(strand = "+") %>% 
+                    dplyr::rename(score = value)) 
+
+# don't think we need these as incompatible with library type
+# rev_df <- map_dfr(rev_bws,
+#                   ~read_bigwig(.x, set_strand = "-")) 
+
+chunk_ivls <- function(df, n) {
+  chroms <- unique(df$chrom)
+  chrom_splits <- split(chroms, cut(seq_along(chroms), n, labels = FALSE))
+  map(chrom_splits, 
+      ~filter(df, chrom %in% .x))
+}
+
+library(doParallel)
+
+n_cores <- detectCores() - 1
+cl <- makeCluster(n_cores)  
+registerDoParallel(cl)  
+
+fwd_df <- foreach(i = chunk_ivls(fwd_df, n_cores),
+        .packages = c("valr"),
+        .combine = rbind
+        ) %dopar% {
+  bed_partition(i, score = sum(score))
+}
+
+# rev_df <- foreach(i = chunk_ivls(rev_df, n_cores),
+#         .packages = c("valr"),
+#         .combine = rbind
+#         ) %dopar% {
+#   bed_partition(rev_df, score = sum(score))
+# }
+
+stopCluster(cl)
+
+# ivl_df <- bind_rows(list(
+#   "+" = fwd_df,
+#   "-" = rev_df),
+#   .id = "strand")
+
+ivl_df <- mutate(fwd_df, strand = "+") %>% 
+                 dplyr::select(chrom:score, strand)
+
+saveRDS(ivl_df, "ivl_df.rds")
+ivl_df <- readRDS("ivl_df.rds")
+
+masked_ivls <- filter(ivl_df, score > 0) %>% 
+  group_by(strand) %>% 
+  bed_merge() %>% 
+  ungroup()
+
+```
+
+## Per transcript masking
+
+```{r}
+gtf_fn <- file.path(db_dir,
+                    "drosophila", 
+                    "primary_transcripts_per_tx.gtf")
+gtf_tbl <- tidy_gtf(gtf_fn)
+exon_bed <- gtf_tbl %>% 
+     filter(type == "exon") %>% 
+     dplyr::select(chrom, start, end, transcript_id, gene_id, score, strand)
+  
+# generate list of introns for each transcript
+intron_table <- exon_bed %>% 
+    group_by(transcript_id, gene_id) %>% 
+    arrange(start, .by_group = T) %>% 
+    mutate(
+      tx_start = min(start),
+      tx_end = max(end),
+      .start = end, 
+           .end = lead(start),
+          start = .start, 
+          end = .end) %>% 
+     dplyr::select(-.start, -.end) %>% 
+     dplyr::filter(!is.na(start),
+           !is.na(end),
+           start < end) %>%
+    mutate(chrom = transcript_id, 
+           new_start = ifelse(strand == "+",
+                          start - tx_start, 
+                          tx_end - end),
+           new_end = ifelse(strand == "+",
+                          end - tx_start, 
+                          tx_end - start),
+           name = ".",
+           score = 0,
+           strand = "+") %>% 
+   ungroup() %>% 
+   dplyr::select(chrom, 
+                start = new_start,
+                  end = new_end,
+                  transcript_id,
+                  gene_id,
+                  strand) %>% 
+  group_by(strand) %>% 
+  split(., .$transcript_id)
+
+mask_df <- masked_ivls %>% 
+  filter(strand == "+") %>% 
+  group_by(strand)
+
+# convert to tx coords
+pre_mrna_bed <- exon_bed %>%
+  filter(str_detect(transcript_id, "^pre_")) %>% 
+  mutate(end = end - start,
+         start = 0,
+         chrom = transcript_id,
+         strand = "+") %>% 
+  group_by(strand)
+
+
+pre_mrnas_to_mask <-  pre_mrna_bed %>% 
+  filter(chrom %in% mask_df$chrom) %>% 
+  pull(transcript_id) %>% 
+  unique()
+
+pre_mrna_table <- exon_bed %>%
+  filter(str_detect(transcript_id, "^pre_")) %>% 
+  mutate(end = end - start,
+         start = 0,
+         chrom = transcript_id,
+        strand = "+") %>% 
+  split(., .$transcript_id)
+
+intron_table <- intron_table[no_pre(pre_mrnas_to_mask)]
+
+intron_table <- map(intron_table, ~mutate(.x, 
+                                          chrom = str_c("pre_", chrom),
+                                          transcript_id = str_c("pre_", transcript_id)))
+
+pre_mrna_mask_coords <- map(pre_mrnas_to_mask, 
+        function(premrna){
+          
+  premrna_ivl <- pre_mrna_table[[premrna]]
+  intron_ivls <- intron_table[[no_pre(premrna)]]
+  
+  if(nrow(premrna_ivl) != 1){
+    stop("intron lookup wrong")
+  }
+  
+  premRNA_start <- premrna_ivl$start
+  premRNA_end <- premrna_ivl$end
+  premRNA_strand <- premrna_ivl$strand
+  
+  # mask only introns 
+  mask_ivls <- mask_df %>% 
+    filter(chrom == premrna) %>% 
+    bed_intersect(., intron_ivls) %>% 
+    ungroup() %>% 
+    filter(.overlap != 0) %>% 
+    dplyr::mutate(start = pmax(start.x, start.y),
+                  end = pmin(end.x, end.y)) %>% 
+    dplyr::select(chrom, start, end, strand = strand.x) %>% 
+    unique() 
+    
+  mask_tx_ivls <- mask_ivls %>% 
+    mutate(name = ".",
+           score = 0,
+           strand = "+") %>% 
+    dplyr::select(chrom, 
+                  start,
+                  end,
+                  name,
+                  score,
+                  strand)
+  
+  list(genome = mask_ivls, 
+       transcriptome = mask_tx_ivls)
+})
+
+
+tx_coords <- map_dfr(pre_mrna_mask_coords, ~.x$transcriptome)
+
+
+ db_out <- tx_coords %>% 
+  dplyr::select(chrom,
+                start, 
+                end, 
+                name,
+                score,
+                strand) %>% 
+  bed_sort() %>% 
+  mutate_if(is.numeric, format, scientific = F)  %>% 
+  mutate_all(str_trim)
+
+write_tsv(db_out, "annotations/fly_intron_mask_txcoords_per_tx_salmon_align.bed", col_names = F)
+
+```
+
+Lastly, exclude transcripts marked as duplicates in original salmon index. These would not be masked by above procedure, and not may no longer be marked as duplicates due to masking the sequence. 
+
+```{r}
+dup_tx <- read_tsv(file.path(db_dir,
+                            "drosophila", 
+                             "salmon", 
+                            "primary_transcripts_per_tx",
+                            "duplicate_clusters.tsv"))
+
+chroms <- read_tsv(file.path(db_dir,
+                            "drosophila", 
+                            "primary_transcripts_per_tx.fa.fai"),
+                   col_names = c("chrom", "size"),
+                   col_type = c("ci---"))
+
+chroms <- chroms %>% 
+  filter(!chrom %in% dup_tx$DuplicateRef)
+
+write_lines(chroms$chrom, file.path("annotations",
+                                    "unique_transcripts.tsv"))
+```
