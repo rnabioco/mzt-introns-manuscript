@@ -1,4 +1,4 @@
-install.packages("BiocManager")
+install.packages(c("BiocManager", "remotes"))
 
 BiocManager::install(c("Biostrings",
                        "Rsamtools",

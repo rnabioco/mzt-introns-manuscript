@@ -51,3 +51,4 @@ RUN cd /home/rstudio/renv-pkgs/ && \
     R -e "renv::snapshot(type = 'implicit', prompt = FALSE)"
 
 WORKDIR /home/rstudio
+
