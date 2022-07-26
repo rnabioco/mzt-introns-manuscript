@@ -1,0 +1,192 @@
+---
+title: "Coral MZT analysis"
+author: "Kent Riemondy RBI"
+date: '`r Sys.Date()`'
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "html") })
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message = FALSE, warning = FALSE, include = FALSE}
+library(here)
+source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
+fig_dir <- "figs"
+species <- "coral"
+dir.create(fig_dir, showWarnings = FALSE)
+```
+
+
+## Approach
+
+
+ 
+## get metadata
+
+```{r get_metadata}
+mdata <- read_tsv(file.path(data_dir, "raw_data",
+                             "coral", 
+                             "CHILLE", "PRJNA616341_download_log.txt"))
+
+mdata$study <- 'CHILLE'
+
+#cleanup sample names
+mdata <- mdata %>% 
+  filter(str_detect(sample_title, "ambient")) %>% 
+  mutate(stage = str_split(sample_title, "_") %>% 
+           map_chr(~str_c(.x[2:(length(.x) -1)], collapse = "_")))
+
+mdata[c("sample_title", "stage")]
+```
+
+```{r }
+gtf <- tidy_gtf(annots[[species]]$gtf)
+
+
+gene2symbol <- gtf %>%
+  filter(type == "gene") %>% 
+  select(gene_id, gene_name) %>% 
+  unique()
+
+gene2tx <- gtf %>%
+   filter(type == "transcript") %>%
+   select(gene_id, transcript_id) %>%
+   na.omit() %>%
+   unique()
+
+gene2intron <- read_tsv(file.path(project_dir, "dbases", "chille/eisa/tx2gene.tsv")) 
+```
+```{r}
+fa_type <- "eisa_masked"
+
+files <- file.path(data_dir,
+                   tolower(mdata$study),
+                   "salmon_bt2_masked", 
+                   fa_type,
+                   mdata$run_accession,
+                   "quant.sf")
+
+dat <- pmap(list(files,  mdata$study,  mdata$run_accession),
+            function(x,y,z){
+              read_tsv(x) %>% 
+                mutate(expt = y, Run = z)
+              })
+dat <- bind_rows(dat)
+
+#join with main data
+dat <- inner_join(dat, 
+                 mdata,
+                 by = c("Run" = "run_accession"))
+
+# classify transcripts as primary or mature
+dat <- mutate(dat, count_type = ifelse(str_detect(Name, 
+                                                  "-I[0-9]*$"), 
+                                       "intron", 
+                                       "exon"))
+
+dat <- dplyr::select(dat,
+                     -c(Length:EffectiveLength, 
+                        NumReads))
+
+dat <- mutate(dat,
+              tmp_id = ifelse(count_type == "intron",
+                               str_remove(Name, "-I[0-9]*$"),
+                               Name))
+# add in geneid attribute
+tpm_dat <- left_join(dat, gene2tx, 
+                 by = c("tmp_id" = "transcript_id")) %>% 
+  dplyr::rename(transcript_id = Name)
+
+```
+
+```{r}
+# sum primary and mature TPMs for each gene 
+summary_dat <- dplyr::select(tpm_dat, TPM, gene_id, 
+              Run, count_type, stage,
+              study) %>% 
+  group_by(gene_id, Run, 
+           stage, count_type) %>% 
+  dplyr::summarize(total_tpm = sum(TPM, na.rm = F)) %>% 
+  ungroup() 
+
+## calc primary ratio
+tpm_summary <- summary_dat %>% 
+  spread(count_type, total_tpm) %>% 
+  mutate(primary_ratio  = intron / (intron + exon))
+
+## calc mean primary ratio
+tpm_means <- tpm_summary %>% 
+  group_by(gene_id, 
+           stage) %>% 
+  summarize(mean_primary = mean(primary_ratio,
+                                na.rm = T)) 
+
+dev_stages_ordered <- c(
+  "egg",
+  "fert_embryo",
+  "cleavage",
+  "prawn_chip",
+  "morulae",
+  "blastula",
+  "gastrula",
+  "planulae"
+)
+
+tpm_means <- mutate(tpm_means, 
+                       stage = factor(stage, 
+                                      levels = dev_stages_ordered)
+                       )
+
+stage_col_palette <- c("#00A875", "#0072BC")
+stage_cols <- stage_col_palette[1 + (levels(tpm_means$stage) >= "cleavage")]
+names(stage_cols) <- levels(tpm_means$stage)
+
+p <- ggplot(tpm_means, 
+       aes(stage, mean_primary)) +
+  geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
+  labs(x = "",
+       y = expression(frac("pre-mRNA TPM", 
+                           "mature + pre-mRNA TPM"))) +
+  geom_vline(aes(xintercept = 2.5), linetype = 'dashed') + 
+  scale_fill_manual(values = stage_cols) +
+  theme(
+    axis.text.x = element_text(angle = 90,
+                               vjust = 0.5,
+                               hjust = 0.5),
+    
+    legend.position = "none"
+  )
+
+save_plot(file.path(fig_dir, "eisa-coral-pre-mRNA-ratios.pdf"),
+                    p, 
+          base_width = 6,
+          base_height = 4.5)
+
+p
+
+walk(c(str_c("fig", 1:5), 
+       "supplement"),
+      ~dir.create(file.path("../figures/pdfs/", .x),
+                  showWarnings = FALSE,
+                  recursive = TRUE))
+
+save_plot("../figures/pdfs/fig1/coral-pre-mRNA-ratios.pdf",
+                    p, 
+          base_width = 6.5,
+          base_height = 6.5)
+
+p
+```
+
+```{r}
+sessioninfo::session_info()
+```

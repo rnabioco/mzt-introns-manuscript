@@ -1,0 +1,273 @@
+---
+title: "Additional analysis"
+output: html_document
+date: '2022-07-18'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
+outdir <- "processed_files"
+fig_dir <- "figs"
+```
+
+
+## Examine splicing rates
+
+See if splicing rates bias intron quantification. For example are highly spliced mRNAs less likely to be detected?
+
+Use splicing rate data from Pai et al. Note that due to space restrictions the provided data is truncated to 1k lines. Dr. Pai provided the full dataset upon request. 
+
+>
+Athma A Pai Telmo HenriquesKayla McCueAdam BurkholderKaren AdelmanChristopher B Burge (2017) The kinetics of pre-mRNA splicing in the Drosophila genome and the influence of gene architecture eLife 6:e32537.
+https://doi.org/10.7554/eLife.32537
+
+```{r}
+sup_tbl_1 <- file.path(docs_dir, "Pai_et_al_SupplementaryFile1.txt")
+srates <- read_tsv(sup_tbl_1)
+median_srates <- srates %>% 
+  group_by(gene) %>%
+  summarize(median_intron_t2 = median(halflife))
+
+```
+
+```{r}
+intron_mean_tpms <- read_tsv(file.path(outdir, "rissland_eisa_bt2_tpm_means.tsv.gz")) %>% 
+  filter(str_detect(gene_id, "-I")) %>% 
+  mutate(gene_id = str_remove(gene_id, "-I")) %>% 
+  pivot_longer(cols = -gene_id) %>% 
+  left_join(median_srates, by = c("gene_id" = "gene")) %>% 
+  na.omit()  %>% 
+  mutate(log_median_intron_t2 = median_intron_t2,
+         intron_bin = ntile(log_median_intron_t2, 5))
+
+dev_stages_ordered <- c(
+  "Stage 11 oocyte",
+  "Stage 12 oocyte",
+  "Stage 13 oocyte",
+  "Stage 14 oocyte",
+  "Activated egg",
+  "0-1 hr embryo",
+  "1-2 hr embryo",
+  "2-3 hr embryo",
+  "3-4 hr embryo",
+  "4-5 hr embryo",
+  "5-6 hr embryo")
+
+intron_mean_tpms <- mutate(intron_mean_tpms, 
+                       stage = factor(name, 
+                                      levels = dev_stages_ordered)
+                       )
+
+stage_col_palette <- c("#00A875", "#0072BC")
+stage_cols <- stage_col_palette[1 + (levels(intron_mean_tpms$stage) >= "2-3 hr embryo")]
+names(stage_cols) <- levels(intron_mean_tpms$stage)
+
+
+n_intron_class <- intron_mean_tpms %>% 
+  select(gene_id, intron_bin, median_intron_t2) %>% 
+  distinct() %>% 
+  group_by(intron_bin) %>% 
+  summarize(n = n(),
+            min_t2 = min(median_intron_t2),
+            max_t2 = max(median_intron_t2)) %>% 
+  mutate(n = str_c("t[2] (", round(min_t2, 3), " - ", round(max_t2, 3), ")")) %>% 
+  pull(n, name = intron_bin)
+
+intron_mean_tpms$intron_bin <- factor(intron_mean_tpms$intron_bin)
+levels(intron_mean_tpms$intron_bin) <- n_intron_class
+
+p1 <- ggplot(intron_mean_tpms, 
+       aes(stage, value)) +
+  geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
+  scale_y_log10(labels = scales::comma, n.breaks = 5) + 
+    facet_wrap(~str_c("All (n = ", length(unique(gene_id)),")")) +
+  labs(x = "",
+       y = "Intron TPM") +
+  scale_fill_manual(values = stage_cols) +
+  theme(
+    axis.text.x = element_text(angle = 90,
+                               vjust = 0.5,
+                               hjust = 0.5),
+    
+    legend.position = "none"
+  )
+
+p2 <- ggplot(intron_mean_tpms, 
+       aes(stage, value)) +
+  geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
+  scale_y_log10(labels = scales::comma, n.breaks = 5) + 
+  facet_wrap(~intron_bin, 
+             scale = "free", 
+             labeller = label_parsed,
+           #  labeller = as_labeller(n_intron_class),
+             nrow = 1) +
+  labs(x = "",
+       y = "Intron TPM") +
+  scale_fill_manual(values = stage_cols) +
+  theme(
+    axis.text.x = element_text(angle = 90,
+                               vjust = 0.5,
+                               hjust = 0.5),
+    
+    legend.position = "none"
+  )
+
+p <- plot_grid(p1, p2, rel_widths = c(0.2, 1))
+save_plot(file.path(fig_dir, "splicing_rate_comparision.pdf"),
+          p,
+          base_asp = 1.6,
+          ncol = 3)
+
+p
+```
+
+
+## Examine intron positional biases
+
+Look to see if early introns have different behavior compared to mid or late introns. 
+
+First double check that intron ordering for each transcript is correct in the eisa GTF and sequences.
+
+```{r}
+library(GenomicFeatures)
+
+gtf <- import(here("dbases/rissland/eisa/eisaR.gtf"))
+txdb <- makeTxDbFromGRanges(gtf)
+transcripts <- transcripts(txdb)
+introns <- transcripts[str_detect(transcripts$tx_name, "-I[0-9]*")]
+introns$og_tx <- str_split(introns$tx_name, "-") %>% map_chr(1)
+introns <- sort(introns)
+intron_df <- data.frame(strand = strand(introns), 
+                        tx_name = mcols(introns)$tx_name,
+                        og_tx = mcols(introns)$og_tx)
+
+intron_df_lst <- split(intron_df, introns$og_tx)
+
+
+int_strand <- lapply(intron_df_lst, function(x) {
+  if(all(x$strand == "+")) {
+    res <- 1:nrow(x)
+  } else {
+    res <- nrow(x):1
+  }
+  data.frame(tx_name = x$tx_name, intron_position = res)
+}) %>% 
+  do.call(rbind, .) 
+rownames(int_strand) <- NULL
+
+introns$intron_position <- int_strand$intron_position[match(introns$tx_name, int_strand$tx_name)]
+  
+mdata <- read_tsv("processed_files/metadata.tsv") %>% 
+  filter(study == "RISSLAND")
+
+rissland_files <- file.path(data_dir,
+                            "rissland",
+                   "salmon_bt2_masked", 
+                   "eisa_masked",
+                   mdata$Run,
+                   "quant.sf")
+
+rs_txi <- tximport(rissland_files, 
+                   type = "salmon",
+                   txOut = TRUE)
+
+cols <- mdata %>% 
+  mutate(cnames = str_c(developmental_stage, strain, sep = "_")) %>% 
+  pull(cnames)
+
+tpm_mat <- rs_txi$abundance
+tpm_mat <- tpm_mat[str_detect(rownames(tpm_mat), "-I"),]
+colnames(tpm_mat) <- cols
+
+tpm_mat <- tidy_matrix(tpm_mat, "gene_id")
+
+intron_positions <- as.data.frame(mcols(introns)[, c("tx_name", "intron_position")])
+# write out mean tpm matrix
+mean_intron_tpms <- tpm_mat %>% 
+  gather(sample, tpm, -gene_id) %>% 
+  separate(sample, c("stage", "strain"), sep = "_") %>% 
+  group_by(gene_id, stage) %>% 
+  summarize(mean_tpm = mean(tpm)) %>% 
+  left_join(intron_positions, c("gene_id" = "tx_name")) %>% 
+  mutate(og_id = str_remove(gene_id, "-I[0-9]*")) %>% 
+  group_by(og_id) %>% 
+  mutate(n_introns = max(intron_position)) %>% 
+  ungroup()
+
+mean_intron_tpms <- mutate(mean_intron_tpms, 
+                           intron_ord = intron_position / n_introns,
+                           intron_bin = case_when(
+                             n_introns < 3 ~ "too-few", 
+                             intron_ord <= 1 / 3 ~ "early",
+                             intron_ord <= 2 / 3 ~ "mid",
+                             intron_ord <= 1 ~ "late"))
+
+dev_stages_ordered <- c(
+  "Stage 11 oocyte",
+  "Stage 12 oocyte",
+  "Stage 13 oocyte",
+  "Stage 14 oocyte",
+  "Activated egg",
+  "0-1 hr embryo",
+  "1-2 hr embryo",
+  "2-3 hr embryo",
+  "3-4 hr embryo",
+  "4-5 hr embryo",
+  "5-6 hr embryo")
+
+mean_intron_tpms <- mutate(mean_intron_tpms, 
+                       stage = factor(stage, 
+                                      levels = dev_stages_ordered)
+                       )
+
+stage_col_palette <- c("#00A875", "#0072BC")
+stage_cols <- stage_col_palette[1 + (levels(mean_intron_tpms$stage) >= "2-3 hr embryo")]
+names(stage_cols) <- levels(mean_intron_tpms$stage)
+
+mean_intron_tpms <- filter(mean_intron_tpms, 
+                           intron_bin != "too-few",
+                           mean_tpm > 0) %>% 
+  mutate(intron_bin = factor(intron_bin, levels = c("early", "mid", "late")))
+
+n_intron_class <- mean_intron_tpms %>% 
+  select(gene_id, intron_bin) %>% 
+  distinct() %>% 
+  group_by(intron_bin) %>% 
+  summarize(n = n()) %>% 
+  mutate(n = str_c(intron_bin, " (n = ", n, ")")) %>% 
+  pull(n, name = intron_bin)
+
+p <- ggplot(mean_intron_tpms, 
+       aes(stage, mean_tpm)) +
+  geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
+  scale_y_log10(labels = scales::comma) + 
+  facet_grid(~intron_bin, scale = "free", labeller = as_labeller(n_intron_class)) +
+  labs(x = "",
+       y = "TPM") +
+  scale_fill_manual(values = stage_cols) +
+  theme(
+    axis.text.x = element_text(angle = 90,
+                               vjust = 0.5,
+                               hjust = 0.5),
+    
+    legend.position = "none"
+  )
+
+save_plot(file.path(fig_dir, "intron_position_comparision.pdf"), 
+          p, 
+          base_asp = 1.6)
+
+p
+```
+
+Overall the distribution of intron signal looks pretty similar for early, mid or late introns. It might be different for a particular set of mRNAs, but we don't have the resolution to look at per transcript differences in intron signal. 
+
+
+
+
+

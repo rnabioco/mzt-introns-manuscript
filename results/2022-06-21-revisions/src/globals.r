@@ -1213,5 +1213,10 @@ annots <- list(
     gtf  = file.path(db_dir, "drosophila", "ext", "Drosophila_melanogaster.BDGP6.84.gtf"),
     genome = file.path(db_dir, "drosophila", "ext", "Drosophila_melanogaster.BDGP6.dna.toplevel.fa"),
     chroms = file.path(db_dir, "drosophila", "ext", "Drosophila_melanogaster.BDGP6.dna.toplevel.fa.fai")
+  ),
+  coral = list(
+    gtf  = file.path(db_dir, "coral", "ext", "Montipora_capitata_HIv2.genes.gtf"),
+    genome = file.path(db_dir, "coral", "ext", "Montipora_capitata_HIv2.assembly.fasta"),
+    chroms = file.path(db_dir, "coral", "ext", "Montipora_capitata_HIv2.assembly.fasta.fai")
   )
 )
