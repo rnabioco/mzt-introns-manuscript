@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 if(!"kentr" %in% installed.packages()){
-  stop("install kentr package using remotes::install_github('kriemo/kentr')")
+  stop("install kentr package using remotes::install_github('kriemo/kentr@c4122d7')")
 }
 
 library(kentr)
@@ -977,5 +977,5 @@ read_bb <- function(bb_fn,
 ## R session info  
 
 ```{r}
-sessioninfo::session_info()
+sessionInfo()
 ```

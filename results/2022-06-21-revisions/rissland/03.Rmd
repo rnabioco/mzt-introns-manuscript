@@ -112,18 +112,22 @@ tx2gene_mapping <- left_join(tibble(Name = rownames(cts)),
                              tx2gene_mapping,
                              by = "Name")
 
-dxd <- DEXSeqDataSet(countData=round(cts),
+if(!file.exists("processed_files/dexseq.rds")){
+  library(BiocParallel)
+  bpp <- MulticoreParam(workers = 11)
+  dxd <- DEXSeqDataSet(countData=round(cts),
                      sampleData=as.data.frame(pdata),
                      design=~sample + exon + mzt:exon,
                      featureID=tx2gene_mapping$Name,
                      groupID=tx2gene_mapping$gene_id)
 
-dxd <- estimateSizeFactors(dxd)
-dxd <- estimateDispersions(dxd, quiet=TRUE)
-dxd <- testForDEU(dxd, reducedModel=~sample + exon)
-
-dxd <- estimateExonFoldChanges( dxd, fitExpToVar="mzt")
-    
+  dxd <- estimateSizeFactors(dxd)
+  dxd <- estimateDispersions(dxd, quiet=TRUE, BPPARAM = bpp)
+  dxd <- testForDEU(dxd, reducedModel=~sample + exon, BPPARAM = bpp)
+  dxd <- estimateExonFoldChanges( dxd, fitExpToVar="mzt", BPPARAM = bpp)
+  saveRDS(dxd, "processed_files/dexseq.rds")
+}
+dxd <- readRDS("processed_files/dexseq.rds")
 dxr <- DEXSeqResults(dxd, independentFiltering=FALSE)
 
 qval <- perGeneQValue(dxr)
@@ -406,7 +410,7 @@ save_plot(file.path(fig_dir, "bar_plot_switching_isos.pdf"),
 Compare annotation features between two classes
 
 
-```{r, eval = FALSE}
+```{r}
 
 library(valr)
 gtf <- tidy_gtf(annots$drosophila$gtf)
@@ -551,17 +555,16 @@ plt_dat %>%
 2) have two rows per gene for maternal and zyg
 
 ```{r}
+if(!"kentr" %in% installed.packages()){
+  stop("install kentr package using remotes::install_github('kriemo/kentr@c4122d7')")
+}
+
 z_g <- zyg_tx[zyg_tx$gene_id %in% to_keep, ]
 m_g <- mat_tx[mat_tx$gene_id %in% to_keep, ]
 mz_annots <- bind_rows(list(zygotic = z_g, 
                maternal = m_g),
           .id = "tx_class")  %>% 
   arrange(qval, gene_name)
-
-
-# library(tidyverse)
-# library(txcompare)
-# library(kentr)
 
 gtf <- tidy_gtf(annots$drosophila$gtf)
 fa_fn <- annots$drosophila$genome
@@ -641,6 +644,21 @@ plot(fit,
 dev.off()
 
 
+```
+```{r}
+shared <- map(2:4, ~tx_pos_features[!tx_pos_features[[.x]], ]$gene_id)
+names(shared) <- c("Alternative\ntranscription start site", "Alternative\n splicing", "Alternative\ncleavage site")
+m <- make_comb_mat(shared)
+p <- UpSet(m,
+      top_annotation = upset_top_annotation(m, add_numbers = TRUE,
+                                            numbers_rot =90),
+    right_annotation = upset_right_annotation(m, add_numbers = TRUE))
+pdf(file.path(fig_dir, "tx_isoform_mechanism_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+p
 ```
 
 
@@ -905,7 +923,9 @@ openxlsx::write.xlsx(., "../tables/table_s3.xlsx", overwrite = TRUE)
 ```
 
 
-## Tx level changes
+## Tx level changes 
+
+
 Assess if transcript level dynamics are driven by exon and/or intron level changes. Hypothesize that many are isoform level dynamics due to transcription.
 
 ```{r}
@@ -1479,10 +1499,9 @@ plt_dat %>%
   mutate(percent = 100 * n / sum(n))
 ```
 
-Make some summary plots
+Make summary plots
 
 ```{r}
-  
 euler_input <- isos %>% 
   filter(!is.na(seq)) %>% #drop transcripts with no CDS
   select(gene_name, 
@@ -1521,6 +1540,34 @@ plot(fit,
      fill = list(fill = viridisLite::viridis(3), 
                  alpha = 0.50))
 dev.off()
+```
+
+```{r}
+euler_input <- isos %>% 
+  filter(!is.na(seq)) %>% #drop transcripts with no CDS
+  select(gene_name, 
+         same_five_prime_utr,
+         same_CDS,
+         same_three_prime_utr) %>% 
+  unique() %>% 
+  column_to_rownames("gene_name") 
+# invert logic same -> altered
+euler_input <- !euler_input
+colnames(euler_input) <- c( "Altered 5'UTR",
+                           "Altered coding region",
+                           "Altered 3'UTR")
+
+m <- make_comb_mat(euler_input)
+p <- UpSet(m,
+      top_annotation = upset_top_annotation(m, add_numbers = TRUE,
+                                            numbers_rot =90),
+    right_annotation = upset_right_annotation(m, add_numbers = TRUE))
+pdf(file.path(fig_dir, "utr_cds_overlap_isoforms_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+p
 ```
 
 
@@ -1696,7 +1743,8 @@ plt_dat %>%
   tally()
 ```
 
-## R session info
+## R session info 
+
 ```{r}
-sessioninfo::session_info()
+sessionInfo()
 ```

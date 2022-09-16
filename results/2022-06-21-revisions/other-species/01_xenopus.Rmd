@@ -18,7 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r, message = FALSE, warning = FALSE, include = FALSE}
-source(here::here("R/globals.r"))
+library(here)
+source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
 fig_dir <- "figs"
 species <- "xenopus_t"
 dir.create(fig_dir, showWarnings = FALSE)
@@ -45,20 +46,20 @@ mdata <- separate(mdata,
                 remove = F)
 
 rzero_samples <- dir(file.path(data_dir,
-                         "salmon_bt2_masked", 
-                         species, 
-                         "OWENS_RIBO",
-                         "eisa_masked"))
+                   "owens_ribo",
+                   "salmon_bt2_masked", 
+                   "eisa_masked"))
 
 rzero_mdata <- filter(mdata, run_accession %in% rzero_samples)
 rzero_mdata
 ```
+
+
 ```{r}
 polya_samples <- dir(file.path(data_dir,
-                         "salmon_bt2_masked", 
-                         species, 
-                         "OWENS_POLYA",
-                         "eisa_masked"))
+                   "owens_polya",
+                   "salmon_bt2_masked", 
+                   "eisa_masked"))
 
 polya_mdata <- filter(mdata, run_accession %in% polya_samples)
 polya_mdata
@@ -75,7 +76,7 @@ gene2tx <- gtf %>%
    na.omit() %>%
    unique()
 
-gene2intron <- read_tsv(here("dbases-rerun", species, "eisa", "tx2gene.tsv"))
+gene2intron <- read_tsv(here("dbases", "owens_ribo", "eisa", "tx2gene.tsv"))
 ```
 
 
@@ -88,9 +89,8 @@ fa_types <- c(
 
 files <- map(fa_types, 
              ~file.path(data_dir,
+                        "owens_ribo",
                         "salmon_bt2_masked", 
-                       species, 
-                      "OWENS_RIBO",
                         .x,
                         rzero_mdata$run_accession,
                         "quant.sf"))
@@ -138,9 +138,8 @@ tpm_dat_rzero <- left_join(dat, gene2tx,
 ```{r read_in_salmon_polya}
 files <- map(fa_types, 
              ~file.path(data_dir,
+                        "owens_polya",
                         "salmon_bt2_masked", 
-                       species, 
-                      "OWENS_POLYA",
                         .x,
                         polya_mdata$run_accession,
                         "quant.sf"))
@@ -208,32 +207,36 @@ tpm_means <- mutate(tpm_means, timepoint = factor(timepoint))
 
 tpm_means <- dplyr::ungroup(tpm_means)
 
+
+
+stage_col_palette <- c("#00A875", "#0072BC")
+stage_cols <- stage_col_palette[1 + (levels(tpm_means$timepoint) > "4.5")]
+names(stage_cols) <- levels(tpm_means$timepoint)
+
 p <- ggplot(tpm_means, aes(timepoint, mean_primary)) +
   geom_boxplot(aes(fill = timepoint), outlier.shape = NA, coef = 1e10) + 
   facet_wrap(~lib_type) +
   labs(x = "",
-       y = expression(frac("pre-mRNA TPM", 
-                           "mature + pre-mRNA TPM"))) +
-  geom_vline(xintercept = 7.5, linetype = 'dashed') + 
-  scale_fill_manual(values = grDevices::colorRampPalette(brewer.pal(12, "Paired"))(length(unique(tpm_means$timepoint)))) +
+       y = expression(frac("Intron TPM", 
+                           "Exon + Intron TPM"))) +
+  geom_vline(xintercept = 10.5, linetype = 'dashed') + 
+  scale_fill_manual(values = stage_cols) +
   theme(
-    axis.text.x = element_text(angle = 90,
-                               vjust = 0.5,
-                               hjust = 0.5),
+    # axis.text.x = element_text(angle = 90,
+    #                            vjust = 0.5,
+    #                            hjust = 0.5),
     legend.position = "none"
   )
 
 save_plot(file.path(fig_dir, "xenopus_t-pre-mRNA-ratios.pdf"),
                     p,
-          base_width = 7,
-          base_height = 4.5)
+          base_asp = 3)
 
 p
 
 save_plot( "../figures/pdfs/fig1/xenopus_t-pre-mRNA-ratios.pdf",
            p,
-          base_width = 6,
-          base_height = 4.5)
+           base_asp = 2)
 
 p
 ```

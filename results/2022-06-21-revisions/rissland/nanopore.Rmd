@@ -8,6 +8,8 @@ output:
     toc: true
     toc_float: true
     df_print: paged
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "html") })
 ---
 
 ```{r setup, include=FALSE}
@@ -467,5 +469,5 @@ save_plot("../figures/pdfs/fig4/nanopore_support.pdf",
 ## R session info  
 
 ```{r}
-sessioninfo::session_info()
+sessionInfo()
 ```

@@ -774,24 +774,30 @@ rissland_mat_annot <- mutate(rissland_mat_annot,
                                                 levels = names(pretty_labels), 
                                                 labels = pretty_labels))
 
+rs_exon_intron_comps_log <- map(rs_exon_intron_comps_log, 
+                                ~{colnames(.x) <- str_replace(colnames(.x), "embryo", "AEL")
+                                  .x
+                                })
+ 
+
 ## All classes
 h1 <- Heatmap(rs_exon_intron_comps_log$exon, 
                             na_col = "black",
-              name = "Exon Abundance",
+              name = "Exon log TPM",
         show_row_dend = F, 
         show_column_dend = F,
         cluster_columns = FALSE,
         show_row_names = FALSE,
-        column_title = "Exon Expression",
+        column_title = "Exon TPM",
         split = rissland_mat_annot$mzt_class)
 
-h2 <- Heatmap(rs_exon_intron_comps_log$intron, name = "Intron Abundance",
+h2 <- Heatmap(rs_exon_intron_comps_log$intron, name = "Intron log TPM",
               na_col = "black",
         show_row_dend = F, 
         show_column_dend = F,
         cluster_columns = FALSE,
         show_row_names = FALSE,
-        column_title = "Intron Expression",
+        column_title = "Intron TPM",
         split = rissland_mat_annot$mzt_class)
 
 pdf(file.path(fig_dir, "eisa_all_classes.pdf"))
@@ -951,12 +957,16 @@ intron_annot_dat <- read_tsv(file.path(count_data_dir,
                                        str_c(pdata_split$RISSLAND$Run[1],
                                        "_intron_annot_out.tsv"))) %>% 
   mutate(count_type = "intron")
+
 saf_annot_dat <- bind_rows(exon_annot_dat,intron_annot_dat) %>% 
   select(gene_id = GeneID, length = Length, count_type)
   
 dat <- left_join(dat, saf_annot_dat,
                  by = c("gene_id", "count_type")) %>% 
   dplyr::rename(gene_name = gene_id)
+
+# remove 0 intron counts from genes without introns
+dat <- filter(dat, !is.na(dat$length))
 
 # assume fragment size of 200 (same as salmon run)
 # tpms are enumerated from gene level counts, so 
@@ -984,15 +994,14 @@ fcount_dat <- left_join(fcount_dat, gsymbol2gid,
 
 fcount_dat$expt <- "featureCounts"
 
-ris_count_mat <- all_dat %>%
-  mutate(gene_id = ifelse(count_type == "intron", 
-                          str_c("pre_", gene_id),
-                          gene_id)) %>% 
-  select(-sample_name, -count_type) %>% 
+ris_count_mat <- fcount_dat %>%
+  mutate(gene_name = ifelse(count_type == "intron", 
+                          str_c("pre_", gene_name),
+                          gene_name)) %>% 
+  select(Run, counts, gene_name) %>% 
   pivot_wider(names_from = "Run", values_from = "counts") %>% 
-  column_to_rownames("gene_id") %>% 
+  column_to_rownames("gene_name") %>% 
   as.matrix()
-
 ```
 
 
@@ -1517,7 +1526,7 @@ p
 dev.off()
 
 
-to_comp <- list(
+final_comparision <- list(
   `De Renzis et al` = d_genes$all_zyg$gene_id,
   `Kwasnieski et al` = b_genes$gene_id,
    `Lott et al` =  union(edata_genes$zyg$gene_id, 
@@ -1527,7 +1536,7 @@ to_comp <- list(
   map(~.x[.x %in% gtf$gene_id] %>%  na.omit(.) %>% .[!duplicated(.)])
 
 set.seed(4)
-a <- euler(to_comp, shape = 'ellipse')
+a <- euler(final_comparision, shape = 'ellipse')
 
 p <- plot(a, 
           quantities = list(fontsize = 16), 
@@ -1540,12 +1549,79 @@ dev.off()
 pdf("../figures/pdfs/fig3/intron_method_classification_overlap.pdf")
 p
 dev.off()
+
+list(
+  `De Renzis et al` = d_genes$all_zyg$gene_id,
+  `Kwasnieski et al` = b_genes$gene_id,
+   `Lott et al` =  union(edata_genes$zyg$gene_id, 
+                                edata_genes$matzyg$gene_id)) %>%
+  saveRDS("processed_files/published_zyg_gene_lists.rds")
+
+list(`Intron method` = gene_class_df,
+     `Fcount Intron method` = fcount_gene_class_df ) %>% 
+  saveRDS("processed_files/traditional_count_v_intron_count_lists.rds")
+  
+```
+
+
+```{r}
+
+to_comp_upset <- list(
+  `DeRenzis, et al.` = d_genes$all_zyg$gene_id,
+  `Kwasnieski, et al.` = b_genes$gene_id,
+  `Lott, et al.` =  union(edata_genes$zyg$gene_id, 
+                                edata_genes$matzyg$gene_id),
+  `Intron read counting` = fcount_gene_class_df %>% filter(mzt_class == "all_zygotic_combined") %>% pull(gene_id)
+) %>% 
+  map(~.x[.x %in% gtf$gene_id] %>%  na.omit(.) %>% .[!duplicated(.)])
+
+m = make_comb_mat(to_comp_upset)
+p <- UpSet(m, 
+      set_order = c("Intron read counting", 
+                    "DeRenzis, et al.", 
+                    "Kwasnieski, et al.", 
+                    "Lott, et al."),
+      top_annotation = upset_top_annotation(m, add_numbers = TRUE,
+                                            numbers_rot =90),
+    right_annotation = upset_right_annotation(m, add_numbers = TRUE))
+
+pdf(file.path(fig_dir, "fcount_method_classification_overlap_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+p
+
+to_comp_upset <- list(
+  `DeRenzis, et al.` = d_genes$all_zyg$gene_id,
+  `Kwasnieski, et al.` = b_genes$gene_id,
+  `Lott, et al.` =  union(edata_genes$zyg$gene_id, 
+                                edata_genes$matzyg$gene_id),
+  `This paper` = gene_class_df %>% filter(mzt_class == "all_zygotic_combined") %>% pull(gene_id)
+) %>% 
+  map(~.x[.x %in% gtf$gene_id] %>%  na.omit(.) %>% .[!duplicated(.)])
+
+m = make_comb_mat(to_comp_upset)
+p <- UpSet(m, 
+      set_order = c("This paper", 
+                    "DeRenzis, et al.", 
+                    "Kwasnieski, et al.", 
+                    "Lott, et al."),
+      top_annotation = upset_top_annotation(m, add_numbers = TRUE,
+                                            numbers_rot =90),
+    right_annotation = upset_right_annotation(m, add_numbers = TRUE))
+pdf(file.path(fig_dir, "intron_method_classification_overlap_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+p
 ```
 
 ```{r}
-all_vals <- unique(unlist(to_comp))
+all_vals <- unique(unlist(final_comparision))
 
-intersection_summary <- imap_dfc(to_comp, 
+intersection_summary <- imap_dfc(final_comparision, 
      ~tibble(!!sym(.y) := all_vals %in% .x )) %>% 
   mutate(gene_id = all_vals) %>% 
   left_join(gene2symbol, by = "gene_id") %>% 
@@ -1559,7 +1635,10 @@ intersection_summary <- imap_dfc(to_comp,
 Check expression level of identified genes
 
 
+
 ```{r}
+library(rstatix)
+library(ggpubr)
 intersection_summary <- mutate(intersection_summary, 
        discovered_class = case_when(
          `Intron method` & !`De Renzis et al` & !`Kwasnieski et al` & !`Lott et al` ~ "This paper",
@@ -1580,11 +1659,18 @@ study_cols <- c("#ED1C24",
 
 names(study_cols) <- levels(intersection_summary$discovered_class)
 
-p <- filter(intersection_summary, !is.na(discovered_class)) %>% 
-  ggplot(aes(discovered_class, baseMean)) +
+expr_plt_dat <- filter(intersection_summary, !is.na(discovered_class))
+
+stat.test <- expr_plt_dat %>%
+  wilcox_test(baseMean ~ discovered_class) %>% 
+  add_significance() %>% 
+  add_xy_position(y.trans = log10)
+
+p <- ggplot(expr_plt_dat, aes(discovered_class, baseMean)) +
     geom_violin(aes(fill = discovered_class)) +
   scale_fill_manual(values = study_cols) + 
   scale_y_log10(labels = scales::comma) +
+ # stat_pvalue_manual(stat.test, hide.ns = T, size = 2) +
   labs(x = "",
        y = "Normalized Expression") +
   theme(legend.position = "none",
@@ -1601,7 +1687,10 @@ save_plot("../figures/pdfs/fig3/expression_comparision_between_groups.pdf",
           base_asp = 1.2,
           base_height = 4)
 p
+stat.test
 ```
+
+All comparisions are significant. 
 
 ```{r}
 filter(intersection_summary, !is.na(discovered_class)) %>% 
@@ -1692,9 +1781,15 @@ tx_length <- gtf %>%
 intersection_summary <- left_join(intersection_summary, 
                                   tx_length,
                                   by = "gene_id") 
-p <- intersection_summary %>% 
-  filter(discovered_class != "other") %>% 
-  ggplot(aes(discovered_class, primary_tx_length)) +
+
+len_plt_dat <- filter(intersection_summary, discovered_class != "other")
+
+stat.test <- len_plt_dat %>%
+  wilcox_test(primary_tx_length ~ discovered_class) %>% 
+  add_significance() %>% 
+  add_xy_position(y.trans = log10)
+
+p <-  ggplot(len_plt_dat, aes(discovered_class, primary_tx_length)) +
     scale_y_log10(labels = scales::comma) + 
     geom_violin(aes(fill = discovered_class)) +
     scale_fill_manual(values = study_cols) + 
@@ -1714,7 +1809,9 @@ save_plot("../figures/pdfs/fig3/primary_tx_length_comparision_between_groups.pdf
           base_asp = 1.2,
           base_height = 4)
 p
+stat.test
 ```
+All comparisions are significant except DeRenzis, et al. v.	Kwasnieski, et al.
 
 ```{r}
 tx_length <- gtf %>% 
@@ -2682,7 +2779,6 @@ p
 
 ## Summary excel files
 
-
 ```{r}
 
 simple_class_labels <- c(
@@ -2769,6 +2865,6 @@ openxlsx::write.xlsx(list(README = col_info,
 ## R session info  
 
 ```{r}
-sessioninfo::session_info()
+sessionInfo()
 ```
 

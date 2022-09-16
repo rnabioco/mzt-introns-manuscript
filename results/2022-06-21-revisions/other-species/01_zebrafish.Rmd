@@ -18,7 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r, message = FALSE, warning = FALSE, include = FALSE}
-source(here::here("R/globals.r"))
+library(here)
+source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
 fig_dir <- "figs"
 species <- "zebrafish"
 dir.create(fig_dir, showWarnings = FALSE)
@@ -51,37 +52,23 @@ gene2tx <- gtf %>%
    na.omit() %>%
    unique()
 
-gene2intron <- read_tsv(here("dbases-rerun", species, "eisa", "tx2gene.tsv"))
+gene2intron <- read_tsv(file.path(project_dir, "dbases", "white/eisa/tx2gene.tsv"))
 ```
 
 
 ## Examine pre-mRNA ratios
 
 ```{r read_in_salmon}
-fa_types <- c(
-  "eisa_masked"
-)
+files <- file.path(data_dir,
+                   "white",
+                   "salmon_bt2_masked", 
+                   "eisa_masked",
+                   mdata$public_name,
+                   "quant.sf")
 
-files <- map(fa_types, 
-             ~file.path(data_dir,
-                        "salmon_bt2_masked", 
-                        species, 
-                        "WHITE",
-                        .x,
-                        mdata$public_name,
-                        "quant.sf"))
-
-dat <- map(files, ~map(.x, read_tsv))
-names(dat) <- fa_types
-
-dat <- map(dat, function(x) {
-  names(x) <- mdata$public_name
-  x
-} )
-
-dat <- map(dat, ~bind_rows(.x, .id = "public_name"))
-
-dat <- bind_rows(dat, .id = "expt")
+dat <- map(files, read_tsv)
+names(dat) <- mdata$public_name
+dat <- bind_rows(dat, .id = "public_name")
 
 #join with main data
 dat <- inner_join(dat, 
@@ -146,13 +133,20 @@ tpm_means <- mutate(tpm_means,
 
 tpm_means <- dplyr::ungroup(tpm_means)
 
+stage_col_palette <- c("#00A875", "#0072BC")
+stage_cols <- stage_col_palette[1 + !levels(tpm_means$stage) %in% c("1-cell",
+                                                                    "2-cell",
+                                                                    "128-cell",
+                                                                    "1k-cell")]
+names(stage_cols) <- levels(tpm_means$stage)
+
 p <- ggplot(tpm_means, 
        aes(stage, mean_primary)) +
   geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
   labs(x = "",
        y = expression(frac("pre-mRNA TPM", 
                            "mature + pre-mRNA TPM"))) +
-  scale_fill_brewer(palette = "Paired") +
+  scale_fill_manual(values = stage_cols) +
   geom_vline(xintercept = 4.5, linetype = 'dashed') + 
   theme(
     axis.text.x = element_text(angle = 90,

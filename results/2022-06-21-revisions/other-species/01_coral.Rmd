@@ -65,6 +65,7 @@ gene2tx <- gtf %>%
 
 gene2intron <- read_tsv(file.path(project_dir, "dbases", "chille/eisa/tx2gene.tsv")) 
 ```
+
 ```{r}
 fa_type <- "eisa_masked"
 
@@ -147,16 +148,17 @@ tpm_means <- mutate(tpm_means,
                        )
 
 stage_col_palette <- c("#00A875", "#0072BC")
-stage_cols <- stage_col_palette[1 + (levels(tpm_means$stage) >= "cleavage")]
+stage_cols <- stage_col_palette[1 + !levels(tpm_means$stage) %in% c("egg", "fert_embryo")]
 names(stage_cols) <- levels(tpm_means$stage)
 
 p <- ggplot(tpm_means, 
        aes(stage, mean_primary)) +
   geom_boxplot(aes(fill = stage), outlier.shape = NA, coef = 1e10) + 
   labs(x = "",
-       y = expression(frac("pre-mRNA TPM", 
-                           "mature + pre-mRNA TPM"))) +
+       y = expression(frac("Intron TPM", 
+                           "Exon + Intron TPM"))) +
   geom_vline(aes(xintercept = 2.5), linetype = 'dashed') + 
+    geom_vline(aes(xintercept = 6.5), linetype = 'dashed') + 
   scale_fill_manual(values = stage_cols) +
   theme(
     axis.text.x = element_text(angle = 90,

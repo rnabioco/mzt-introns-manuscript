@@ -614,8 +614,7 @@ get_effective_lengths <- function(tx_lens,
 #                       fld_mean,
 #                       fld_sd) %>% 
 #   data.frame(tx_lens, .) %>% 
-#   arrange(tx_lens) %>% 
-#   View()
+#   arrange(tx_lens) 
 
 
 #'@export
@@ -1218,5 +1217,27 @@ annots <- list(
     gtf  = file.path(db_dir, "coral", "ext", "Montipora_capitata_HIv2.genes.gtf"),
     genome = file.path(db_dir, "coral", "ext", "Montipora_capitata_HIv2.assembly.fasta"),
     chroms = file.path(db_dir, "coral", "ext", "Montipora_capitata_HIv2.assembly.fasta.fai")
+  ),
+  xenopus_t = list(
+    gtf  = file.path(db_dir, "xenopus_t", "ext", "xenTro9.gtf"),
+    genome = file.path(db_dir, "xenopus_t", "ext", "xenTro9.fa"),
+    chroms = file.path(db_dir, "xenopus_t", "ext", "xenTro9.fa.fai")
+  ),
+  zebrafish = list(
+    gtf  = file.path(db_dir, "zebrafish", "ext", "danRer10.gtf"),
+    genome = file.path(db_dir, "zebrafish", "ext", "danRer10.fa"),
+    chroms = file.path(db_dir, "zebrafish", "ext", "danRer10.fa.fai")
   )
 )
+
+
+
+
+
+
+
+
+
+
+
+
