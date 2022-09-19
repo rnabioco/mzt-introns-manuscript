@@ -32,6 +32,15 @@ results_dir <- file.path(project_dir, "results")
 docs_dir <- file.path(project_dir, "docs")
 db_dir <- file.path(project_dir, "dbases")
 
+pfig_base_dir <- file.path(results_dir, "2022-06-21-revisions", "figures")
+pfig_dir <- file.path(pfig_base_dir, paste0("fig_", 1:5))
+psfig_dir <- file.path(pfig_base_dir, paste0("sup_fig_", 1:5))
+pfig_dir <- as.list(c(pfig_dir, psfig_dir))
+names(pfig_dir) <- c(paste0("fig_", 1:5), paste0("sup_fig_", 1:5))
+purrr::walk(pfig_dir, dir.create, showWarnings = FALSE, recursive = TRUE)
+ptable_dir <- file.path(results_dir, "2022-06-21-revisions", "sup_tables")
+dir.create(ptable_dir, showWarnings = FALSE)
+
 #### functions ####
 #' Read in a bigwig file into a valr compatible bed tibble
 #' @description This function will output a 5 column tibble with
@@ -437,15 +446,8 @@ plot_tx_coverage <- function(bw_fns,
   
   # get coverage
   cov_list <- map(bw_fns, 
-                  ~get_bw(.x,
-                          chrom = chrom,
-                          start = start,
-                          end = end) %>% 
-                    makeGRangesFromDataFrame(., 
-                                             keep.extra.columns = TRUE,
-                                             seqnames.field = 'contig',
-                                             starts.in.df.are.0based = TRUE,
-                                             ignore.strand = TRUE))
+                  ~GRanges(seqnames = chrom, ranges = IRanges(start = start, end = end)) %>% 
+                    import(.x, which = .))
   
   if(scale_y){
     ymax <- map(cov_list, ~.x$coverage) %>% unlist() %>% max()
@@ -469,7 +471,8 @@ plot_tx_coverage <- function(bw_fns,
                               name =  as.character(y),
                               chromosome = chrom, 
                               genome = gnome,
-                              col.line = z,
+                              col.histogram = z,
+                              fill.histogram = z,
                               ylim = y_limits
                     )})
   
@@ -488,7 +491,7 @@ plot_tx_coverage <- function(bw_fns,
              chromosome = chrom,
              from = start,
              to = end,
-             type = "S",
+             type = "hist",
              reverseStrand = strand == "-", 
              col.title = "black",
              col.axis = "black",

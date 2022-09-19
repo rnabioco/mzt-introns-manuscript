@@ -48,11 +48,29 @@ vals <- lapply(seq_along(msked_intron_log_fns), function(i){
 vals
 ```
 
+## Examine recovery of earliest transcripts from DeRenzis
+
+```{r}
+library(readxl)
+tmp_fn <- tempfile(fileext = "xlsx")
+download.file("https://genome.cshlp.org/content/suppl/2019/06/21/gr.242164.118.DC1/Supplemental_Table_S1_.xlsx", tmp_fn)
+sup_tbl_1 <- read_excel(tmp_fn, skip = 2)
+unlink(tmp_fn)
+
+derenzis_kwas_genes <- sup_tbl_1$GENES[sup_tbl_1$DE_RENZIS_2007]
+
+our_annot <- read_excel("processed_files/mzt_class_summary.xlsx", sheet = 2)
+derenzis_kwas_genes
+
+our_zyg <- unique(our_annot$gene_name[our_annot$mzt_class %in% c("Zygotic", "Maternal + Zygotic")])
+length(unique(intersect(our_zyg, derenzis_kwas_genes)))
+```
+
 ## Examine splicing rates
 
 See if splicing rates bias intron quantification. For example are highly spliced mRNAs less likely to be detected?
 
-Use splicing rate data from Pai et al. Note that due to space restrictions the provided data is truncated to 1k lines. Dr. Pai provided the full dataset upon request.
+Use splicing rate data from Pai et al. Note that due to space restrictions the supplemental data is truncated to 1k lines. Dr. Pai provided the full dataset upon request.
 
 > Athma A Pai Telmo HenriquesKayla McCueAdam BurkholderKaren AdelmanChristopher B Burge (2017) The kinetics of pre-mRNA splicing in the Drosophila genome and the influence of gene architecture eLife 6:e32537. <https://doi.org/10.7554/eLife.32537>
 
@@ -189,7 +207,7 @@ p <- ggplot(intron_mean_tpms,
                                hjust = 0.5)
   )
 
-save_plot(file.path(fig_dir, "splicing_rate_comparision_v2.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_2, "s2c_splicing_rate_comparision_v2.pdf"),
           p,
           base_asp = 1.6)
 
@@ -571,7 +589,7 @@ p <- ggplot(res, aes(library, value)) +
        fill = NULL) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-save_plot(file.path(fig_dir, "maternal_intronic_reads_distribution.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_2, "s2b_maternal_intronic_reads_distribution.pdf"),
           p,
           base_asp = 1.2)
 p
@@ -677,16 +695,6 @@ gene2symbol <- tidy_gtf(annots$drosophila$gtf) %>%
 mean_tpms <- read_tsv(file.path(outdir,
                                       "rissland_eisa_bt2_tpm_means.tsv.gz"))
 
-to_keep <- mean_tpms$gene_id
-
-drop_genes <- function(x, to_keep){
-  x$abundance <- x$abundance[rownames(x$abundance) %in% to_keep, ]
-  x$counts <- x$counts[rownames(x$counts) %in% to_keep, ]
-  x$length <- x$length[rownames(x$length) %in% to_keep, ]
-  x$infReps <- map(x$infReps, ~.x[rownames(.x) %in% to_keep, ])
-  x
-}
-rs_txi <- drop_genes(rs_txi, to_keep)
 rs_ddobj <- DESeqDataSetFromTximport(rs_txi, 
                                      pdata_split$RISSLAND, 
                                      ~strain_id + mzt)
@@ -1069,7 +1077,7 @@ p <- fcount_intron_gl %>%
        y = "Percent of genes",
        fill = "") 
 
-save_plot(file.path(fig_dir, "fcount_v_icount_nintrons.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_4, "s4e_fcount_v_icount_nintrons.pdf"),
           p,
           base_asp = 1.5)
 p
@@ -1095,7 +1103,7 @@ p <- fcount_intron_gl %>%
     theme(legend.position = "none",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-save_plot(file.path(fig_dir, "fcount_v_icount_primary_tx_length_comparision.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_4, "s4f_fcount_v_icount_primary_tx_length_comparision.pdf"),
           p,
           base_asp = 0.66)
 p
@@ -1119,7 +1127,7 @@ p <- fcount_intron_gl %>%
     theme(legend.position = "none",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-save_plot(file.path(fig_dir, "fcount_v_icount_proportion_of_masking.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_4, "s4j_fcount_v_icount_proportion_of_masking.pdf"),
           p,
           base_asp = 0.66)
 p
@@ -1144,49 +1152,9 @@ p <- fcount_intron_gl %>%
     theme(legend.position = "none",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-save_plot(file.path(fig_dir, "fcount_v_icount_median_intron_length.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_4, "s4g_fcount_v_icount_median_intron_length.pdf"),
           p,
           base_asp = 0.66)
-p
-```
-
-
-
-```{r, eval = FALSE}
-p <- fcount_intron_gl %>% 
-  ggplot(aes(gene_class, uniqueness_exon)) +
-    geom_jitter(size = 0.5) +
-    geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
-  labs(x = "",
-       y = "uniqueness_exon") +
-    theme(legend.position = "none",
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-# save_plot(file.path(fig_dir, "primary_tx_length_comparision_between_groups.pdf"),
-#           p,
-#           base_asp = 1.2,
-#           base_height = 4)
-wilcox.test(uniqueness_exon ~ gene_class, fcount_intron_gl_2class)
-
-p
-
-```
-
-```{r, eval = FALSE}
-p <- fcount_intron_gl %>% 
-  ggplot(aes(gene_class, uniqueness_intron)) +
-    geom_jitter(size = 0.5) +
-    geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
-  labs(x = "",
-       y = "uniqueness_intron") +
-    theme(legend.position = "none",
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-# save_plot(file.path(fig_dir, "primary_tx_length_comparision_between_groups.pdf"),
-#           p,
-#           base_asp = 1.2,
-#           base_height = 4)
-wilcox.test(uniqueness_intron ~ gene_class, fcount_intron_gl_2class)
 p
 ```
 
@@ -1209,7 +1177,7 @@ p <- fcount_intron_gl %>%
     theme(legend.position = "none",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-save_plot(file.path(fig_dir, "fcount_v_icount_intron_normalized_expression.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_4, "s4i_fcount_v_icount_intron_normalized_expression.pdf"),
           p,
           base_asp = 0.66)
 
@@ -1235,7 +1203,7 @@ p <- fcount_intron_gl %>%
     theme(legend.position = "none",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-save_plot(file.path(fig_dir, "fcount_v_icount_exon_normalized_expression.pdf"),
+save_plot(file.path(pfig_dir$sup_fig_4, "s4h_fcount_v_icount_exon_normalized_expression.pdf"),
           p, base_asp = 0.66)
 
 p

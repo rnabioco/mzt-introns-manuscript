@@ -17,7 +17,6 @@ source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
 library(DEXSeq)
 eisa_dir <- file.path(project_dir, "dbases", "rissland", "eisa")
 fig_dir <- "figs"
-#dir.create(fig_dir, recursive = TRUE)
 tbl_dir <- "processed_files"
 ```
 
@@ -635,16 +634,8 @@ plot(fit,
           labels = list(fontsize = 20))
 dev.off()
 
-
-pdf("../figures/pdfs/fig4/tx_isoform_mechanism_euler.pdf")
-plot(fit, 
-     fills = list(fill = viridisLite::viridis(3), alpha = 0.5),
-     quantities = list(fontsize = 16), 
-          labels = list(fontsize = 20))
-dev.off()
-
-
 ```
+
 ```{r}
 shared <- map(2:4, ~tx_pos_features[!tx_pos_features[[.x]], ]$gene_id)
 names(shared) <- c("Alternative\ntranscription start site", "Alternative\n splicing", "Alternative\ncleavage site")
@@ -653,7 +644,7 @@ p <- UpSet(m,
       top_annotation = upset_top_annotation(m, add_numbers = TRUE,
                                             numbers_rot =90),
     right_annotation = upset_right_annotation(m, add_numbers = TRUE))
-pdf(file.path(fig_dir, "tx_isoform_mechanism_upset.pdf"),
+pdf(file.path(pfig_dir$fig_4, "4c_tx_isoform_mechanism_upset.pdf"),
     width = 4.5, 
     height = 3)
 p
@@ -890,9 +881,6 @@ p
 save_plot(file.path(fig_dir, "Go_term_enrichment_isoform_genes.pdf"),
           p, base_asp = 1.2, base_height = 6.5)
         
-save_plot("../figures/pdfs/fig4/Go_term_enrichment_isoform_genes.pdf",
-          p, base_asp = 1.2, base_height = 6.5)
-
 write_tsv(res_out, file.path(tbl_dir, "go_terms_isoforms.tsv")) 
 
 to_keep <- c("GO:BP",
@@ -919,7 +907,7 @@ res_out %>%
                   gene_name) %>% 
   mutate(source = str_replace_all(source, '[[:punct:]]+', " ")) %>% 
   split(., .$source) %>% 
-openxlsx::write.xlsx(., "../tables/table_s3.xlsx", overwrite = TRUE)
+openxlsx::write.xlsx(., file.path(ptable_dir, "table_s4.xlsx"), overwrite = TRUE)
 ```
 
 
@@ -941,7 +929,6 @@ tx2gene_mapping <- read_tsv(file.path(eisa_dir, "tx2gene.tsv")) %>%
          transcript_id = ifelse(str_detect(tx_id, eisa_regex),
                                 str_c(str_remove(tx_id, eisa_regex), "-I"),
                                 tx_id))
-
 
 # add up introns per transcript, using tximports approach
 tx2gene_mapping <- tx2gene_mapping[tx2gene_mapping$tx_id %in% rownames(counts), ]
@@ -1032,6 +1019,7 @@ tmp_annot <- arrange(additional_annots, gene_name)
 mat_tx <- tmp_annot %>% filter(tx_class == "maternal") 
 zyg_tx <- tmp_annot %>% filter(tx_class == "zygotic")
 
+colnames(tx_tpms) <- str_replace(colnames(tx_tpms), "embryo", "AEL")
 sig_mat_tx_log_counts <- tx_tpms %>% 
   filter(transcript_id %in% mat_tx$featureID) %>% 
   left_join(mat_tx, by = c("transcript_id" = "featureID")) %>% 
@@ -1054,6 +1042,7 @@ shared <- intersect(rownames(sig_mat_tx_log_counts), rownames(sig_zyg_tx_log_cou
 sig_mat_tx_log_counts <- sig_mat_tx_log_counts[shared, ]
 sig_zyg_tx_log_counts <- sig_zyg_tx_log_counts[shared, ]
  
+# red_blue_alpha <- c("#ED1C2460", "#0072BC60")
 
 ht_pre <- Heatmap(sig_zyg_tx_log_counts, 
          name = "Zygotic mRNA\nlog expression",
@@ -1063,7 +1052,9 @@ ht_pre <- Heatmap(sig_zyg_tx_log_counts,
          cluster_rows = TRUE,
          #right_annotation = ha,
          top_annotation = HeatmapAnnotation(Mean = anno_lines(colMeans(sig_zyg_tx_log_counts),
-                                                              add_points = TRUE)),
+                                                              add_points = TRUE,
+                                                              border = FALSE),
+                                            show_annotation_name = FALSE),
          column_title = "Zygotic Isoforms")
 
 ht_gene <- Heatmap(sig_mat_tx_log_counts,
@@ -1071,24 +1062,27 @@ ht_gene <- Heatmap(sig_mat_tx_log_counts,
          show_row_names = FALSE,
          show_row_dend = FALSE,
          cluster_columns = FALSE,
-         cluster_rows = TRUE,
+         cluster_rows = FALSE,
+         row_order = row_order(ht_pre),
           top_annotation = HeatmapAnnotation(Mean = anno_lines(colMeans(sig_mat_tx_log_counts),
-                                                               add_points = TRUE)),
+                                                               add_points = TRUE,
+                                                               border = FALSE),
+                                             show_annotation_name = FALSE),
          column_title = "Maternal Isoforms")
 
 pdf(file.path(fig_dir, "mat_v_zyg_isoforms_heatmap.pdf"), 
     height = 7, 
     width = 7)
-  draw(ht_pre + ht_gene)
+  draw( ht_pre + ht_gene)
 dev.off()
 
-pdf("../figures/pdfs/fig4/mat_v_zyg_isoforms_heatmap.pdf", 
+pdf(file.path(pfig_dir$fig_4, "4b_mat_v_zyg_isoforms_heatmap.pdf"), 
     height = 7, 
     width = 7)
-  draw(ht_pre + ht_gene)
+  draw(ht_gene + ht_pre)
 dev.off()
 
-draw(ht_pre + ht_gene)
+draw(ht_gene + ht_pre)
 ```
 
 ### Average profile
@@ -1245,7 +1239,7 @@ openxlsx::write.xlsx(list(README = README_txt,
                           mat_zyg_isoforms = simple_annots,
                           mat_zyg_isoforms_CDS_changes = cds_changed_annots,
                           all_isoforms = all_tx_data_out),
-                     "../tables/table_s2.xlsx",
+                     file.path(ptable_dir, "table_s3.xlsx"),
                      overwrite = TRUE)
 
 write_lines(README_txt, file.path(tbl_dir, "README.txt"))
@@ -1259,6 +1253,11 @@ write_lines(README_txt, file.path(tbl_dir, "README.txt"))
 isos <- read_tsv(file.path(tbl_dir, "all_isoform_annotations.tsv"))
 ```
 
+```{r}
+mat_zyg_cols <- c("#F7941D", "#00A875", "#0072BC") 
+mat_zyg_red_cols <- c(mat_zyg_cols, "#ED1C24")
+mat_zyg_grey_cols <- c(mat_zyg_cols[2:3], "#808285")
+```
 
 
 ```{r}
@@ -1269,17 +1268,17 @@ mass_spec_evidence <- filter(isos,
   select(pep_tx, featureID) %>% 
   unique() %>% 
   mutate(peptide_evidence = case_when(
-    is.na(pep_tx) ~ "non-unique CDS isoform",
+    is.na(pep_tx) ~ "Non-unique CDS\nisoform",
     map2(featureID, 
          str_split(pep_tx, ","), 
          ~.x %in% .y) %>% 
-      unlist() ~ "peptide evidence",
-    pep_tx == "no match" ~ "no peptide evidence",
-    TRUE ~ "no peptide evidence"))
+      unlist() ~ "Mass spec peptides\nobserved",
+    pep_tx == "no match" ~ "No mass spec\npeptides observed",
+    TRUE ~ "No mass spec\npeptides observed"))
 
 p <- ggplot(mass_spec_evidence, aes("1")) +
   geom_bar(aes(fill = peptide_evidence))  +
-  scale_fill_viridis_d(name = "Peptides Observed \n in Mass Spec") +
+  scale_fill_manual(values = mat_zyg_grey_cols, name = "") +
   labs(x = "",
        y = "# of proteins",
        fill = "") + 
@@ -1291,7 +1290,7 @@ save_plot(file.path(fig_dir, "mass_spec_overlap.pdf"),
           p,
           base_asp = 1.2)
 
-save_plot("../figures/pdfs/fig5/mass_spec_overlap.pdf",
+save_plot(file.path(pfig_dir$fig_5, "5c_mass_spec_overlap.pdf"),
           p,
           base_asp = 1.2)
 ```
@@ -1455,10 +1454,11 @@ tx_list <- split(pfam_iso_domains, pfam_iso_domains$gene_name)
 domain_summary_out <- find_domain_similarities(tx_list)
 
 pretty_rename <- c(
-  "domain sequence changed" = "Domain sequence changed",
+  "domain sequence changed" = "Domain\nsequence\nchanged",
   "same" = "Other CDS change",
   "loss" = "Domain loss",
-  "gain" = "Domain gain")
+  "gain" = "Domain gain",
+  "gain_and_loss" = "Domain gain\nand loss")
 
 plt_dat <- select(domain_summary_out, 
        gene_name,
@@ -1479,7 +1479,8 @@ plt_dat <- select(domain_summary_out,
 p <- ggplot(plt_dat,
        aes("1")) +
     geom_bar(aes(fill = domain_summary)) +
-  scale_fill_viridis_d(name = "") +
+  scale_fill_manual(values = c(mat_zyg_red_cols, "#808285")[c(2, 4, 5, 3, 1)],
+                    name = "") +
   labs(x = "",
        y = "# of proteins") + 
   theme(axis.text.x = element_blank())
@@ -1487,7 +1488,7 @@ p
 save_plot(file.path(fig_dir, "cds_domain_change_summary.pdf"), p,
           base_asp = 1.2)
 
-save_plot("../figures/pdfs/fig5/cds_domain_change_summary.pdf", p,
+save_plot(file.path(pfig_dir$fig_5, "5b_cds_domain_change_summary.pdf"), p,
           base_asp = 1.2)
 ```
 
@@ -1533,13 +1534,6 @@ plot(fit,
 dev.off()
 
 
-pdf("../figures/pdfs/fig5/utr_cds_overlap_isoforms.pdf")
-plot(fit,
-     quantities = list(fontsize = 16),
-     labels = list(fontsize = 20),
-     fill = list(fill = viridisLite::viridis(3), 
-                 alpha = 0.50))
-dev.off()
 ```
 
 ```{r}
@@ -1563,6 +1557,12 @@ p <- UpSet(m,
                                             numbers_rot =90),
     right_annotation = upset_right_annotation(m, add_numbers = TRUE))
 pdf(file.path(fig_dir, "utr_cds_overlap_isoforms_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+
+pdf(file.path(pfig_dir$fig_5, "5a_utr_cds_overlap_isoforms_upset.pdf"),
     width = 4.5, 
     height = 3)
 p
@@ -1714,17 +1714,17 @@ plt_dat <- ribo_summary %>%
   left_join(tibble(transcript_id = zyg_tx$featureID),
             .) %>% 
   mutate(evidence = case_when(
-    is.na(total_rpfs) ~ "non-unique CDS isoform",
-    total_rpfs > 10 ~ "RPFs observed (> 10)",
-    TRUE ~ "No RPFs observed"),
+    is.na(total_rpfs) ~ "Non-unique CDS\nisoform",
+    total_rpfs > 10 ~ ">= 10 RPFs observed\nin Ribo-seq",
+    TRUE ~ "< 10 RPFs observed\nin Ribo-seq"),
          x = "1") 
 
 p <- ggplot(plt_dat,
        aes(x)) +
   geom_bar(aes(fill = evidence)) +
-  scale_fill_viridis_d(name = "") +
+  scale_fill_manual(values = mat_zyg_grey_cols[c(3,1,2)], name = "") + 
   labs(x = "",
-       y = "# of CDS") +
+       y = "Number of coding regions") +
   theme(axis.text.x = element_blank())
 
 save_plot(file.path(fig_dir, "riboprofiling_coverage.pdf"),
@@ -1732,7 +1732,7 @@ save_plot(file.path(fig_dir, "riboprofiling_coverage.pdf"),
           base_asp = 1.2)
 p
 
-save_plot("../figures/pdfs/fig5/riboprofiling_coverage.pdf",
+save_plot(file.path(pfig_dir$fig_5, "5d_riboprofiling_coverage.pdf"),
           p,
           base_asp = 1.2)
 ```

@@ -249,13 +249,7 @@ save_plot(file.path(fig_dir, "eisa-fly-pre-mRNA-ratios.pdf"),
 
 p
 
-walk(c(str_c("fig", 1:5), 
-       "supplement"),
-      ~dir.create(file.path("../figures/pdfs/", .x),
-                  showWarnings = FALSE,
-                  recursive = TRUE))
-
-save_plot("../figures/pdfs/fig1/fly-pre-mRNA-ratios.pdf",
+save_plot(file.path(pfig_dir$fig_1, "1d_fly-pre-mRNA-ratios.pdf"),
                     p, 
           base_width = 6.5,
           base_height = 6.5)
@@ -424,7 +418,7 @@ mean_intronic_tpms <- mean_intronic_tpms %>%
 tmp_plt_dat <- bind_rows(mean_intronic_tpms, mean_exonic_tpms) %>% 
   mutate(count_type = factor(count_type, 
                              levels = c("exon", "intron"),
-                             labels = c("mRNA", "pre-mRNA")),
+                             labels = c("Exon", "Intron")),
          log2FoldChange = ifelse(log2FoldChange > 10,
                                  10,
                                  ifelse(log2FoldChange < -10,
@@ -432,16 +426,15 @@ tmp_plt_dat <- bind_rows(mean_intronic_tpms, mean_exonic_tpms) %>%
                                         log2FoldChange))) %>% 
   arrange(count_type) 
 
+grey_red <- c("#808285", "#ED1C24")
+
 # note, clipping rare genes > abs(10) log2Foldchange to 10
 ma_plot <- ggplot(tmp_plt_dat %>% filter(padj < 0.05),
                     aes(mean_tpm,
                         log2FoldChange)) +
-    geom_point(aes(colour = count_type), size = 0.1) +
-    scale_colour_viridis(
-      discrete = TRUE,
-      name = "",
-      drop = FALSE,
-    ) +
+    geom_point(aes(fill = count_type), size = 2, shape = 21,
+               colour = "white", stroke = 0.5) +
+    scale_fill_manual(values = grey_red , name = "") +
     scale_x_log10( labels = scales::comma) +
     geom_hline(yintercept = 0, linetype = 'dashed', color ='darkgrey') + 
     ylim(c(-10, 10)) + 
@@ -450,7 +443,7 @@ ma_plot <- ggplot(tmp_plt_dat %>% filter(padj < 0.05),
            "Zygotic", "Maternal"
          )))) +
     guides(colour = guide_legend(nrow = 1,
-                                 override.aes = list(size = 3))) +
+                                override.aes = list(size = 3))) +
     theme(legend.position = "top")
 
 ma_plot
@@ -461,7 +454,7 @@ save_plot(file.path(fig_dir, "ma_plot_eisa_bt2_count_type.pdf"),
           base_height = 5)
 
 
-save_plot("../figures/pdfs/fig2/ma_plot.pdf", 
+save_plot(file.path(pfig_dir$fig_2, "2a_exon_intron_ma_plot.pdf"), 
           ma_plot, 
           base_aspect_ratio = 1.4)
 
@@ -646,7 +639,7 @@ save_plot(file.path(fig_dir, "maternal_cut_off_examination.pdf"),
           base_asp = 1.75,
           limitsize = FALSE)
 
-save_plot("../figures/pdfs/supplement/maternal_cut_off_examination.pdf",
+save_plot(file.path(pfig_dir$sup_fig_3, "sfig_3_maternal_cut_off_examination.pdf"),
           p,
           nrow = 5,
           ncol = 2,
@@ -804,6 +797,11 @@ pdf(file.path(fig_dir, "eisa_all_classes.pdf"))
 draw(h1 + h2)
 dev.off()
 
+
+pdf(file.path(pfig_dir$fig_2, "2e_eisa_all_classes.pdf"))
+draw(h1 + h2)
+dev.off()
+
 draw(h1 + h2)
 ```
 
@@ -829,18 +827,20 @@ mean_tpms_annot <- filter(mean_tpms_annot,
 mean_tpms_annot <- mean_tpms_annot %>% 
   group_by(mzt_class) %>%
   mutate(mzt_class = str_c(mzt_class, 
-                           "\n n = ", 
-                           scales::comma(length(unique(gene_id)))))
-p <- ggplot(mean_tpms_annot, aes(stage, TPM)) +
-    geom_boxplot(aes(fill = count_type), notch = T, coef = 1e9) +
+                           "\n (n = ", 
+                           scales::comma(length(unique(gene_id))),
+                           ")"),
+         stage_ael = str_remove(stage, " hr embryo"))
+p <- ggplot(mean_tpms_annot, aes(stage_ael, TPM)) +
+    geom_boxplot(aes(fill = count_type),
+                 notch = T, coef = NULL) +
     scale_fill_brewer(palette = "Set1") + 
+    scale_fill_manual(values = grey_red) + 
     facet_grid(~mzt_class) +
-    labs(x = "",
+    labs(x = "Hours after egg laying",
          y = "TPM (Log2)",
          fill = "") +
-    theme(axis.text.x = element_text(angle = 90, 
-                                     hjust = 1, 
-                                     vjust = 0.5))
+    theme(strip.background = element_blank())
 p
 
 save_plot(file.path(fig_dir, "tpm_distribution_mztclasses.pdf"),
@@ -848,7 +848,7 @@ save_plot(file.path(fig_dir, "tpm_distribution_mztclasses.pdf"),
           base_asp = 2)
 p
 
-save_plot("../figures/pdfs/fig2/tpm_distribution_mztclasses.pdf",
+save_plot(file.path(pfig_dir$fig_2, "2b_tpm_distribution_mztclasses.pdf"),
           p,
           base_asp = 2,
           limitsize = FALSE)
@@ -881,33 +881,42 @@ rs_exon_intron_comps_symbol <- map(rs_exon_intron_comps,
       column_to_rownames("gene_name") %>% 
       as.matrix())
 
+rs_exon_intron_comps_symbol <- lapply(rs_exon_intron_comps_symbol, 
+                                      function(x){
+                                        colnames(x) <- str_remove(colnames(x), " hr embryo")
+                                        x 
+                                      })
 to_plot <- c(
-  "Egfr",
-  "tna",
+  "clt",
+  "bic",
   "tou",
   "14-3-3epsilon",
-  "clt",
-  "bic"
+  "Egfr",
+  "tna"
 )
-cols <- viridis::viridis(3)
-plts <- map2(to_plot, rep(cols, each = 2), 
-    ~plot_exon_intron_expr(.x, rs_exon_intron_comps_symbol, line_width = 1.5, line_col = .y))
+mat_zyg_cols <- c("#F7941D", "#00A875", "#0072BC") 
+plts <- map2(to_plot, rep(mat_zyg_cols, each = 2), 
+    ~plot_exon_intron_expr(.x, 
+                           rs_exon_intron_comps_symbol, 
+                           line_width = 1.5,
+                           line_col = .y) +
+      labs(x = "Hours after\negg laying") + 
+      theme(strip.background = element_blank()))
 
-
-plt <- plot_grid(plotlist = plts, nrow = 3,
-          ncol = 2)
+plt <- plot_grid(plotlist = plts, nrow = 1,
+          ncol = 6)
 
 plt
 
 save_plot(file.path(fig_dir, "exon_intron_example_genes.pdf"),
           plt,
-          nrow = 3, ncol = 2, base_asp = 0.85,
-          base_height = 3.5)
+          nrow = 1, ncol = 6, base_asp = 0.85,
+          base_height = 4)
 
-save_plot("../figures/pdfs/fig2/exon_intron_example_genes.pdf",
+save_plot(file.path(pfig_dir$fig_2, "2d_exon_intron_example_genes.pdf"),
           plt,
-          nrow = 3, ncol = 2, base_asp = 0.85,
-          base_height = 3.5)
+          nrow = 1, ncol = 6, base_asp = 0.6,
+          base_height = 4.5)
 ```
 
 
@@ -1176,6 +1185,8 @@ f_classfieid <- mean_f_exonic_tpms %>%
   filter(gene_id %in% inot_classified$gene_id) %>% 
   select(gene_id:`4-5 hr embryo`, count_type) 
 
+
+grey_blue <- c("#808285", "#2484C6")
 p1 <- bind_rows(list("F_count" = f_classfieid,
           "Intron_count" = inot_classified),
           .id = "class") %>% 
@@ -1183,7 +1194,7 @@ p1 <- bind_rows(list("F_count" = f_classfieid,
   ggplot(aes(name, value)) +
     geom_boxplot(aes(fill = class), coef = 1e5) +
     scale_y_log10(labels = scales::comma) +
-  scale_fill_brewer(palette = "Set1") + 
+  scale_fill_manual(values = grey_blue) + 
  geom_hline(yintercept = 1) +
   labs(x = "",
        y = "log10 TPM",
@@ -1204,6 +1215,7 @@ plt_explain <- tbl_comp %>%
 
 plt_explain[is.na(plt_explain)] <- FALSE
 
+blue_cols <- c("#C7D6EE", "#659AD2", "#2484C6")
 p2 <- plt_explain %>% 
   mutate(
     either_sig = isig_exon | isig_intron,
@@ -1226,7 +1238,7 @@ p2 <- plt_explain %>%
   simple_explain = str_wrap(simple_explain, width = 20)) %>% 
   ggplot(aes("1")) +
     geom_bar(aes(fill = simple_explain)) +
-  scale_fill_brewer(palette = "Set1") + 
+  scale_fill_manual(values = rev(blue_cols)) + 
   labs(x = "",
        y = "# of zygotic genes\nonly detected by\n traditional approach",
        fill = "") +
@@ -1258,7 +1270,7 @@ ftpm_summary <- fcount_dat %>%
 p3 <- bind_rows(itpm_summary, ftpm_summary) %>% 
   ggplot(aes(class, n)) +
   geom_boxplot(aes(fill = count_type)) +
-  scale_fill_brewer(palette = "Set1") + 
+  scale_fill_manual(values = grey_red) + 
   labs(x = "",
        y = "# of genes detected",
        fill = "") +
@@ -1276,7 +1288,7 @@ plot_grid(p2, p1, p3, ncol = 3, rel_widths = c(0.75, 1, 1)) %>%
 
 
 plot_grid(p2, p1, p3, ncol = 3, rel_widths = c(0.75, 1, 1)) %>% 
-  save_plot("../figures/pdfs/supplement/zyg_genes_missed_by_our_pipeline.pdf",
+  save_plot(file.path(pfig_dir$sup_fig_4, "s4abc_zyg_genes_missed_by_our_pipeline.pdf"),
             .,
             nrow = 1,
             ncol = 3,
@@ -1349,11 +1361,12 @@ p
 
 ```{r, fig.width = 14, fig.height= 3}
 ps <- map(to_plot,
-       ~{ggplot(plt_dat,
+       ~{set.seed(42)
+         ggplot(sample_n(plt_dat, size = nrow(plt_dat)),
                 aes_string(str_c("`", .x, "_traditional_method", "`"),
                     str_c("`", .x, "_our_method", "`"))) +
-  geom_point(aes(color = count_type)) +
-  scale_color_brewer(palette = "Set1") +          
+  geom_point(aes(fill = count_type), shape = 21, stroke = 0.4, size = 1, colour = "white") +
+  scale_fill_manual(values = grey_red, name = "") + 
   geom_abline(slope = 1, linetype = 'dashed') +
   scale_x_log10(labels = scales::comma) + 
   scale_y_log10(labels = scales::comma) +
@@ -1372,7 +1385,7 @@ save_plot(file.path(fig_dir, "comp_tpms_traditional_v_our_pipeline.pdf"),
           nrow = 1,
           ncol = 5)
 
-save_plot("../figures/pdfs/supplement/comp_tpms_traditional_v_our_pipeline.pdf",
+save_plot(file.path(pfig_dir$sup_fig_4, "s4d_comp_tpms_traditional_v_our_pipeline.pdf"),
           p,
           base_asp = 1.2,
           nrow = 1,
@@ -1490,15 +1503,17 @@ library(eulerr)
 
 a <- euler(to_comp)
 
+
+red_blue_alpha <- c("#ED1C2460", "#0072BC60")
 p <- plot(a, 
-          quantities = list(fontsize = 16), 
-          labels = list(fontsize = 20))
+          fills = red_blue_alpha, legend = TRUE,
+          quantities = list(fontsize = 16))
 p
 pdf(file.path(fig_dir, "fcount_v_intron_count_classification_overlap.pdf"))
 p
 dev.off()
 
-pdf("../figures/pdfs/fig3/fcount_v_intron_count_classification_overlap.pdf")
+pdf(file.path(pfig_dir$fig_3, "3a_fcount_v_intron_count_classification_overlap.pdf"))
 p
 dev.off()
 
@@ -1519,9 +1534,6 @@ p <- plot(a,
           labels = list(fontsize = 20))
 p
 pdf(file.path(fig_dir, "fcount_classification_overlap.pdf"))
-p
-dev.off()
-pdf("../figures/pdfs/fig3/fcount_classification_overlap.pdf")
 p
 dev.off()
 
@@ -1546,9 +1558,6 @@ pdf(file.path(fig_dir, "intron_method_classification_overlap.pdf"))
 p
 dev.off()
 
-pdf("../figures/pdfs/fig3/intron_method_classification_overlap.pdf")
-p
-dev.off()
 
 list(
   `De Renzis et al` = d_genes$all_zyg$gene_id,
@@ -1567,7 +1576,7 @@ list(`Intron method` = gene_class_df,
 ```{r}
 
 to_comp_upset <- list(
-  `DeRenzis, et al.` = d_genes$all_zyg$gene_id,
+  `De Renzis, et al.` = d_genes$all_zyg$gene_id,
   `Kwasnieski, et al.` = b_genes$gene_id,
   `Lott, et al.` =  union(edata_genes$zyg$gene_id, 
                                 edata_genes$matzyg$gene_id),
@@ -1578,7 +1587,7 @@ to_comp_upset <- list(
 m = make_comb_mat(to_comp_upset)
 p <- UpSet(m, 
       set_order = c("Intron read counting", 
-                    "DeRenzis, et al.", 
+                    "De Renzis, et al.", 
                     "Kwasnieski, et al.", 
                     "Lott, et al."),
       top_annotation = upset_top_annotation(m, add_numbers = TRUE,
@@ -1590,10 +1599,17 @@ pdf(file.path(fig_dir, "fcount_method_classification_overlap_upset.pdf"),
     height = 3)
 p
 dev.off()
+
+pdf(file.path(pfig_dir$fig_3, "3b_fcount_method_classification_overlap_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+
 p
 
 to_comp_upset <- list(
-  `DeRenzis, et al.` = d_genes$all_zyg$gene_id,
+  `De Renzis, et al.` = d_genes$all_zyg$gene_id,
   `Kwasnieski, et al.` = b_genes$gene_id,
   `Lott, et al.` =  union(edata_genes$zyg$gene_id, 
                                 edata_genes$matzyg$gene_id),
@@ -1604,13 +1620,19 @@ to_comp_upset <- list(
 m = make_comb_mat(to_comp_upset)
 p <- UpSet(m, 
       set_order = c("This paper", 
-                    "DeRenzis, et al.", 
+                    "De Renzis, et al.", 
                     "Kwasnieski, et al.", 
                     "Lott, et al."),
       top_annotation = upset_top_annotation(m, add_numbers = TRUE,
                                             numbers_rot =90),
     right_annotation = upset_right_annotation(m, add_numbers = TRUE))
 pdf(file.path(fig_dir, "intron_method_classification_overlap_upset.pdf"),
+    width = 4.5, 
+    height = 3)
+p
+dev.off()
+
+pdf(file.path(pfig_dir$sup_fig_5, "intron_method_classification_overlap_upset.pdf"),
     width = 4.5, 
     height = 3)
 p
@@ -1642,15 +1664,16 @@ library(ggpubr)
 intersection_summary <- mutate(intersection_summary, 
        discovered_class = case_when(
          `Intron method` & !`De Renzis et al` & !`Kwasnieski et al` & !`Lott et al` ~ "This paper",
-         !`Intron method` & `De Renzis et al` & !`Kwasnieski et al` & !`Lott et al` ~ "DeRenzis, et al.",
+         !`Intron method` & `De Renzis et al` & !`Kwasnieski et al` & !`Lott et al` ~ "De Renzis, et al.",
          !`Intron method` & !`De Renzis et al`& `Kwasnieski et al` & !`Lott et al` ~ "Kwasnieski, et al.",
          !`Intron method` & !`De Renzis et al`& !`Kwasnieski et al` &  `Lott et al` ~ "Lott, et al.",
          TRUE ~ "other"
-       ))
+       )) %>% 
+  filter(discovered_class != "other")
 
 intersection_summary <- mutate(intersection_summary, 
                                discovered_class = factor(discovered_class,
-                                                         levels = c("This paper", "DeRenzis, et al.", "Kwasnieski, et al.", "Lott, et al.")))
+                                                         levels = c("This paper", "De Renzis, et al.", "Kwasnieski, et al.", "Lott, et al.")))
 
 study_cols <- c("#ED1C24",
                 "#F7941D",
@@ -1682,7 +1705,7 @@ save_plot(file.path(fig_dir, "expression_comparision_between_groups.pdf"),
           base_height = 4)
 p
 
-save_plot("../figures/pdfs/fig3/expression_comparision_between_groups.pdf",
+save_plot(file.path(pfig_dir$fig_3, "3c_expression_comparision_between_groups.pdf"),
           p,
           base_asp = 1.2,
           base_height = 4)
@@ -1732,7 +1755,7 @@ p <- intersection_summary %>%
   scale_fill_manual(values = study_cols) + 
   geom_col(aes(fill = discovered_class), position = position_dodge2()) +
  # scale_y_log10(labels = scales::comma) +
-  labs(x = "# of introns",
+  labs(x = "Number of introns",
        y = "Percent of genes",
        fill = "") 
 
@@ -1742,33 +1765,11 @@ save_plot(file.path(fig_dir, "intron_count_comparision_between_groups.pdf"),
 
 p
 
-save_plot("../figures/pdfs/fig3/intron_count_comparision_between_groups.pdf",
+save_plot(file.path(pfig_dir$fig_3, "3d_intron_count_comparision_between_groups.pdf"),
           p,
           base_asp = 1.5)
 p
 
-```
-
-```{r, eval = FALSE}
-# library(kentr)
-# u_count <- gtf %>% 
-#   filter(type == "exon") %>% 
-#   get_sequences(fasta_path = annots$drosophila$genome) %>% 
-#   mutate(count_u = str_count(seq, "T|t"), ) %>% 
-#   select(transcript_id, gene_id, count_u)  %>% 
-#   group_by(transcript_id, gene_id) %>% 
-#   summarize(count_u = sum(count_u)) %>% 
-#   group_by(gene_id) %>% 
-#   summarize(count_u = mean(count_u))
-# 
-# intersection_summary <- left_join(intersection_summary, 
-#                                   u_count,
-#                                   by = "gene_id") 
-# intersection_summary %>% 
-#   filter(discovered_class != "other") %>% 
-#   ggplot(aes(discovered_class, count_u)) +
-#     scale_y_log10() + 
-#     geom_boxplot()
 ```
 
 ```{r}
@@ -1804,7 +1805,7 @@ save_plot(file.path(fig_dir, "primary_tx_length_comparision_between_groups.pdf")
           base_height = 4)
 p
 
-save_plot("../figures/pdfs/fig3/primary_tx_length_comparision_between_groups.pdf",
+save_plot(file.path(pfig_dir$fig_3, "3e_primary_tx_length_comparision_between_groups.pdf"),
           p,
           base_asp = 1.2,
           base_height = 4)
@@ -2612,7 +2613,8 @@ tpt_plt_dat <- dplyr::select(plt_dat, gene_id , Gene, mzt_class = stage_expressi
 all_plt_dat <- bind_rows(
   list(`Classification` = all_plt_dat, 
        `Zygotic genes` = tpt_plt_dat),
-       .id = "type")
+       .id = "type") %>% 
+  mutate(mzt_class = str_remove(mzt_class, " hr embryo"))
 
 plt_txt <- all_plt_dat %>%
   group_by(mzt_class, type) %>% 
@@ -2635,17 +2637,19 @@ p <- ggplot(all_plt_dat, aes(mzt_class, zelda_signal)) +
   geom_text(data = plt_txt, aes(y = 11000, label = n)) +
   labs(x = "",
        y = "Zelda Chip-Seq Signal") +
-  scale_fill_viridis_d() +
+  scale_fill_manual(values = c(blue_cols, blue_cols[3], mat_zyg_cols)) +
   theme(legend.position = "none",
         axis.text.x = element_text(angle = 90,
                                    hjust = 1,
-                                   vjust = 0.5))
+                                   vjust = 0.5),
+        strip.background = element_blank(),
+        strip.text = element_blank())
 p
 save_plot(file.path(fig_dir, "zelda-binding.pdf"),
           p,
           base_asp = 1.2)
 
-save_plot("../figures/pdfs/fig2/zelda-binding.pdf",
+save_plot(file.path(pfig_dir$fig_2, "2c_zelda-binding.pdf"),
           p,
           base_asp = 1,
           base_height = 5)
@@ -2653,128 +2657,9 @@ save_plot("../figures/pdfs/fig2/zelda-binding.pdf",
 dplyr::select(stat.test, 
               type:group2, p:p.adj.signif, 
               n1,n2) %>% 
-  write_csv("../figures/pdfs/fig2/zelda-binding-stats.csv")
+  write_csv(file.path(pfig_dir$fig_2, "zelda-binding-stats.csv"))
 ```
 Note that the #s of genes shown here are fewer than the # of genes that we can classify. For the `classification` panel, the # is less because there are genes that do not have zelda binding information in the Eisen data, due to gene name differences or other reasons. The `Zygotic genes` panel has fewer genes because we classify time to expression first solely on intronic read counts, which are not present for every zygotic gene (due to monoexonic genes or no intronic signal for other reasons). If a gene is not classified but is a purly zygotic gene then it will be classified by it's exonic signal. For these reasons the #s don't match, which we should explaoin in the figure legend/methods 
-
-
-## Compare intron supplemented salmon counts to original spliced only reference
-
-```{r, fig.height=7, fig.width=3.5, eval = FALSE}
-masked_files <- here(data_dir,
-                   "salmon_bt2_masked", 
-                   "drosophila",
-                   pdata_split$RISSLAND$study,
-                   fa_type,
-                   pdata_split$RISSLAND$Run,
-                   "quant.sf")
-
-rs_txi <- tximport(masked_files, 
-                         type = "salmon",
-                         tx2gene = gene2intron)
-
-og_files <- here(data_dir,
-                   "salmon_bt2_masked", 
-                   "drosophila",
-                   pdata_split$RISSLAND$study,
-                   "spliced_only",
-                   pdata_split$RISSLAND$Run,
-                   "quant.sf")
-
-rs_txi_og <- tximport(og_files, 
-                         type = "salmon",
-                         tx2gene = gene2intron)
-
-#genes_in_both <- rownames(rs_txi_og$abundance)
-
-genes_to_examine <- intersect(unique(gene_class_df$gene_id),
-                              rownames(rs_txi_og$abundance))
-
-rs_txi <- rs_txi$abundance[genes_to_examine, ]
-rs_txi_og <- rs_txi_og$abundance[genes_to_examine, ]
-
-colnames(rs_txi) <- pdata_split$RISSLAND$Run
-colnames(rs_txi_og) <- pdata_split$RISSLAND$Run
-
-r <- cor(rs_txi, rs_txi_og)
-r[lower.tri(r)] <- NA
-Heatmap(r, cluster_rows = FALSE, cluster_columns = FALSE)
-
-print(str_c("the mean correlation between the intron masked transcriptome and a standard transcriptome is:", mean(diag(r))))
-```
-
-
-```{r, eval = FALSE}
-deviation_in_tpms <- map_dfr(1:ncol(rs_txi), 
-    ~{
-      run <- colnames(rs_txi)[.x]
-      m <- log2(rs_txi[, .x]) - log2(rs_txi_og[, .x])
-      a <- log2(rs_txi[, .x] * rs_txi_og[, .x]) / 2
-      tibble(
-        Run = run,
-        gene_name = rownames(rs_txi),
-        log2_intron_v_spliced = m,
-        mean_log_tpm = a
-      ) %>% 
-        arrange(desc(abs(log2_intron_v_spliced)))
-    }) %>% 
-  left_join(mdata)
-
-
-uniq_kmers <- read_tsv(here('dbases', 'drosophila', 'eisa_uniqueness.tsv')) %>%
-  mutate(uniqueness = unique / total)
-
-deviation_in_tpms <- left_join(deviation_in_tpms, 
-                               uniq_kmers, by = c("gene_name" = "gene")) %>% 
-  left_join(n_introns_per_gene, 
-            by = c("gene_name" = "gene_id")) %>% 
-  filter(is.finite(log2_intron_v_spliced))
-
-n_gene_summary <- filter(deviation_in_tpms, abs(log2_intron_v_spliced) > 1) %>% 
-  group_by(strain, developmental_stage) %>% 
-  summarize(n = n(), 
-            n_label = str_c("n = ", n))
-p <- ggplot(deviation_in_tpms, aes(mean_log_tpm, log2_intron_v_spliced)) +
-  geom_point(aes(color = uniqueness), size = 0.1) +
-  scale_color_viridis_c() + 
-  facet_wrap(strain~developmental_stage, nrow = 2) 
-  
-p 
-
-save_plot(file.path(fig_dir, "comparision_to_exon_only_counting.pdf"), 
-          p,
-          base_asp = 1, nrow = 2, ncol = 3)
-
-simple_n_gene <- filter(n_gene_summary, strain == "w1118")
-p <- deviation_in_tpms %>% 
-  filter(strain == "w1118") %>% 
-  ggplot(., aes(mean_log_tpm, log2_intron_v_spliced)) +
-  geom_point(aes(color = uniqueness), size = 0.01) +
-  scale_color_viridis_c() + 
-  geom_text(data = simple_n_gene, aes(x = 10, y = 2, label = n_label)) + 
-  facet_wrap(~developmental_stage, nrow = 1) +
-  labs(x = "Average expresson (mean log TPM)",
-       y = expression(paste(Delta,  " TPM ", "Log"[2])),
-       subtitle = "Intron containing reference versus spliced only reference")
-  
-p 
-
-save_plot(file.path(fig_dir, "comparision_to_exon_only_counting_simple.pdf"), 
-          p,
-          base_asp = 1, nrow = 1, ncol = 3)
-
-
-deviation_in_tpms <- mutate(deviation_in_tpms, 
-                            q = ifelse(log2_intron_v_spliced < -0.5,
-                                       "down",
-                                       "other"))
- p <- ggplot(deviation_in_tpms, aes(q, uniqueness)) +
-  geom_boxplot() +
-  facet_wrap(strain~developmental_stage, nrow = 2) 
-  
-p 
-
-```
 
 
 ## Summary excel files
@@ -2854,10 +2739,9 @@ openxlsx::write.xlsx(list(README = col_info,
                           mzt_classifications = out_summary_table),
                      file.path(outdir,"mzt_class_summary.xlsx"),
                      overwrite = TRUE)
-dir.create("../tables")
 openxlsx::write.xlsx(list(README = col_info,
                           mzt_classifications = out_summary_table),
-                     "../tables/table_s1.xlsx",
+                     file.path(ptable_dir, "table_s2.xlsx"),
                      overwrite = TRUE)
 
 ```

@@ -162,7 +162,7 @@ save_plot(file.path(fig_dir, "zebrafish-pre-mRNA-ratios.pdf"),
 
 p
 
-save_plot( "../figures/pdfs/fig1/zebrafish-pre-mRNA-ratios.pdf",
+save_plot(file.path(pfig_dir$fig_1, "1c_zebrafish-pre-mRNA-ratios.pdf"),
            p,
           base_width = 6,
           base_height = 4.5)

@@ -443,7 +443,10 @@ p <- mutate(switch_isos_summary,
        `detected_4-5_hr` = ifelse(is.na(`4-5 hr embryo`),
                                 FALSE,
                                 `4-5 hr embryo` > 0),
-       detected = `detected_0-1_hr` | `detected_4-5_hr` ) %>% 
+       detected = `detected_0-1_hr` | `detected_4-5_hr`,
+       detected = ifelse(detected, 
+                         "Nanopore support",
+                         "No nanopore support")) %>% 
   group_by(transcript_type, detected) %>% 
   summarize(`# of transcripts` = n()) %>% 
   group_by(transcript_type) %>% 
@@ -452,7 +455,7 @@ p <- mutate(switch_isos_summary,
           .by_group = TRUE) %>% 
   ggplot(aes(transcript_type, `# of transcripts`)) + 
     geom_col(aes(fill = detected)) +
-    scale_fill_viridis_d(name = "Supported by\nnanopore reads") +
+    scale_fill_manual(values = c("#00A875", "#808285"), name = "") +
   labs(x = "")
 
 p
@@ -461,7 +464,7 @@ save_plot(file.path(out_dir, "nanopore_support.pdf"),
           p,
           base_asp = 1.2)
 
-save_plot("../figures/pdfs/fig4/nanopore_support.pdf",
+save_plot(file.path(pfig_dir$fig_4, "4e_nanopore_support.pdf"),
           p,
           base_asp = 1.2)
 ```

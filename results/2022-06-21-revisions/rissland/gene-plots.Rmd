@@ -35,10 +35,6 @@ palette_OkabeIto <-  c("#E69F00",
                        "#CC79A7",
                        "#999999")
 
-walk(c("tx-ribo-coverage-plots", "tx-nano-plots", "nano-read-align", "tx-coverage-plots"),
-     ~dir.create(file.path("../figures/pdfs", .x),
-                 recursive = TRUE, 
-                 showWarnings = TRUE))
 ```
 
 ```{r}
@@ -193,34 +189,34 @@ ont_align_summary <- read_tsv(file.path("processed_files",
 
 gtf_obj <- import(annots$drosophila$gtf)
 
-to_plot <- c(
-  "PNUTS",
-  "RhoGEF3",
-  "toc",
-  "numb",
-  "Miro",
-  "Zn72D",
-  "Cdk2",
-  "bl",
-  "pUf68",
-  "E2f1"
-)
-
-walk(to_plot[10], 
-    ~{
-      features <- switch_isos %>% filter(gene_name == .x) %>% pull(transcript_id)
-      ont_align <- filter(ont_align_summary, rname %in% features)
-      
-      pdf(file.path("../figures/pdfs/tx-nano-plots/", str_c(.x, "_coverage.pdf")),
-          width = 12,
-          height = 4)
-      plot_ont_tx(ont_align, features, gtf_obj, cols_to_use = palette_OkabeIto,
-                 title.width = 1.5,
-                 #sizes = c(0.1, rep(0.25, 5)),
-                 fontsize = 12,
-                 cex.title = 1)
-      dev.off()
-    })
+# to_plot <- c(
+#   "PNUTS",
+#   "RhoGEF3",
+#   "toc",
+#   "numb",
+#   "Miro",
+#   "Zn72D",
+#   "Cdk2",
+#   "bl",
+#   "pUf68",
+#   "E2f1"
+# )
+# 
+# walk(to_plot[10], 
+#     ~{
+#       features <- switch_isos %>% filter(gene_name == .x) %>% pull(transcript_id)
+#       ont_align <- filter(ont_align_summary, rname %in% features)
+#       
+#       pdf(file.path("../figures/pdfs/tx-nano-plots/", str_c(.x, "_coverage.pdf")),
+#           width = 12,
+#           height = 4)
+#       plot_ont_tx(ont_align, features, gtf_obj, cols_to_use = palette_OkabeIto,
+#                  title.width = 1.5,
+#                  #sizes = c(0.1, rep(0.25, 5)),
+#                  fontsize = 12,
+#                  cex.title = 1)
+#       dev.off()
+#     })
 ```
 
 
@@ -390,26 +386,24 @@ ont_align_summary <- read_tsv("processed_files/all_merged_read_alignments.tsv")
   
 ```{r}
 to_plot <- c(
-  "PNUTS",
-  "RhoGEF3",
+  # "PNUTS",
+  # "RhoGEF3",
   "toc",
-  "numb",
-  "Miro",
-  "Zn72D",
-  "bl",
-  "Cdk2",
-  "E2f1"
+  #"numb",
+  "Miro"
+  # "Zn72D",
+  # "bl",
+  # "Cdk2",
+  # "E2f1"
 )
 
-nano_tx_outdir <- "../figures/pdfs/nano-read-align/"
-dir.create(nano_tx_outdir, showWarnings = FALSE)
 walk(to_plot,
     ~{
       features <- switch_isos %>%
         filter(gene_name == .x) %>% 
         arrange(transcript_type) %>% 
         pull(transcript_id) 
-      pdf(file.path(nano_tx_outdir, str_c(.x, "_coverage.pdf")), height = 5, width = 12)
+      pdf(file.path(pfig_dir$fig_4, str_c("4d_", .x, "_coverage.pdf")), height = 5, width = 12)
       plot_tx_nano_coverage(rnafns, 
                             gtfs, 
                             features, 
@@ -433,7 +427,7 @@ walk(to_plot,
       labs(x = "",
            y = "# of reads",
            fill = "")
-  save_plot(file.path(nano_tx_outdir, str_c(.x, "_read_counts.pdf")),
+  save_plot(file.path(pfig_dir$fig_4, str_c("4d_", .x, "_read_counts.pdf")),
             p,
             base_asp = 1)
 })
@@ -567,42 +561,44 @@ tx_summary_plots <- function(bws,
 }
 
 genes_to_plot <- c(
-  "PNUTS",
-  "cnn",
-  "Zn72D",
-  "numb",
-  "lig",
-  "Psa",
-  "Rb97D",
-  "pyd",
-  "CG8331",
-  "Pk92B",
-  "yata",
-  "hts",
   "bl",
-  "eIF-2gamma",
-  "Npc1a",
-  "Su(var)2-10",
-  "toc",
-  "Hph",
-  "blot",
-  "Mhcl",
-  "SC35",
-  "CG4658",
-  "arm",
-  "Nmnat",
-  "Adar",
-  "Plip",
   "Cdk2",
-  "CycE")
-
-tx_figs <- file.path(fig_dir, "tx_figs")
-dir.create(tx_figs, showWarnings = FALSE)
+  "Adar",
+  "Zn72D")
+# genes_to_plot <- c
+#   "PNUTS",
+#   "cnn",
+#   "Zn72D",
+#   "numb",
+#   "lig",
+#   "Psa",
+#   "Rb97D",
+#   "pyd",
+#   "CG8331",
+#   "Pk92B",
+#   "yata",
+#   "hts",
+#   "bl",
+#   "eIF-2gamma",
+#   "Npc1a",
+#   "Su(var)2-10",
+#   "toc",
+#   "Hph",
+#   "blot",
+#   "Mhcl",
+#   "SC35",
+#   "CG4658",
+#   "arm",
+#   "Nmnat",
+#   "Adar",
+#   "Plip",
+#   "Cdk2",
+#   "CycE")
 
 walk(genes_to_plot,
     ~{
-      pdf(file.path(tx_figs,
-                    str_c(.x, "_tx_coverage.pdf")),
+      pdf(file.path(pfig_dir$fig_4,
+                    str_c("4a_", .x, "_tx_coverage.pdf")),
           width = 6,
           height = 3)
       if (!.x %in% additional_annots$gene_name){
@@ -618,33 +614,33 @@ walk(genes_to_plot,
       dev.off()
     })
 
-tx_figs <- "../figures/pdfs/tx-coverage-plots/"
-dir.create(tx_figs, showWarnings = FALSE)
+# tx_figs <- "../figures/pdfs/tx-coverage-plots/"
+# dir.create(tx_figs, showWarnings = FALSE)
 
-walk(genes_to_plot,
-    ~{
-      message(.x)
-      pdf(file.path(tx_figs,
-                    str_c(.x, "_tx_coverage.pdf")),
-          width = 6,
-          height = 3)
-      if (!.x %in% additional_annots$gene_name){
-        message(.x, " not switching iso")
-        return(NULL)
-      }
-      tx_summary_plots(bw_fns, gene = .x, 
-                 isoform_annotation_df = additional_annots,
-                 title.width = 1.5,
-                 sizes = c(0.1, rep(0.25, 5)),
-                 fontsize = 8,
-                 cex.title = 1)
-      dev.off()
-    })
+# walk(genes_to_plot,
+#     ~{
+#       message(.x)
+#       pdf(file.path(tx_figs,
+#                     str_c(.x, "_tx_coverage.pdf")),
+#           width = 6,
+#           height = 3)
+#       if (!.x %in% additional_annots$gene_name){
+#         message(.x, " not switching iso")
+#         return(NULL)
+#       }
+#       tx_summary_plots(bw_fns, gene = .x, 
+#                  isoform_annotation_df = additional_annots,
+#                  title.width = 1.5,
+#                  sizes = c(0.1, rep(0.25, 5)),
+#                  fontsize = 8,
+#                  cex.title = 1)
+#       dev.off()
+#     })
 
 ```
 
 
-Include ribosome profiling and nanopore
+Include ribosome profiling and bulk rna-seq 
 
 ```{r}
 plot_tx_ribo_coverage <- function(rnafns, 
@@ -668,18 +664,11 @@ plot_tx_ribo_coverage <- function(rnafns,
   start <- min(gfeatures$start)
   end <- max(gfeatures$end)
   strand <- as.vector(unique(gfeatures$strand))[1]
-  
+
   # get rna coverage
   rna_cov_list <- map(rnafns, 
-      ~get_bw(.x,
-             chrom = chrom,
-             start = start,
-             end = end) %>% 
-        makeGRangesFromDataFrame(., 
-                                 keep.extra.columns = TRUE,
-                                 seqnames.field = 'contig',
-                                 starts.in.df.are.0based = TRUE,
-                                 ignore.strand = TRUE))
+      ~GRanges(seqnames = chrom, ranges = IRanges(start = start, end = end)) %>% 
+        import(.x, which = .))
   
   if(scale_y){
     ymax <- map(rna_cov_list, ~.x$coverage) %>% unlist() %>% max()
@@ -710,15 +699,8 @@ plot_tx_ribo_coverage <- function(rnafns,
   
    # get ribo coverage
   ribo_cov_list <- map(ribofns, 
-      ~get_bw(.x,
-             chrom = chrom,
-             start = start,
-             end = end) %>% 
-        makeGRangesFromDataFrame(., 
-                                 keep.extra.columns = TRUE,
-                                 seqnames.field = 'contig',
-                                 starts.in.df.are.0based = TRUE,
-                                 ignore.strand = TRUE))
+      ~GRanges(seqnames = chrom, ranges = IRanges(start = start, end = end)) %>% 
+        import(.x, which = .))
   
   if(scale_y){
     ymax <- map(ribo_cov_list, ~.x$coverage) %>% unlist() %>% max()
@@ -789,8 +771,8 @@ rpf_mdata <- filter(rpf_mdata, str_detect(sample_title,
                                       "_wt_") & str_detect(sample_title, "RPF")) %>% 
   mutate(sample_title = str_split(sample_title, "_wt_") %>% map_chr(1))
 to_keep <- c(
-  "Stage_11",
-  "Activated_egg",
+  # "Stage_11",
+  # "Activated_egg",
   "0-1_h",
   "2-3_h",
   "3-4_h",
@@ -818,7 +800,6 @@ ribo_bw_fns <- list("+" = ribo_bw_fns_fwd,
 gtf_obj <- import(annots$drosophila$gtf)
 ```
 
-
 ```{r}
 ribo_tx_summary_plots <- function(rnabws, 
                              ribobws,
@@ -841,26 +822,28 @@ ribo_tx_summary_plots <- function(rnabws,
                  )
 }
 
+
 genes_to_plot <- c(
   "PNUTS",
-  "toc",
-  "CG2201",
-  "Mhcl",
-  "cnn",
-  "numb",
-  "hts",
-  "RhoGEF3",
-  "CycE",
-  "Siz",
-  "Adar")
+  "CycE")
 
-tx_figs <- file.path(fig_dir, "tx_ribo_figs")
-dir.create(tx_figs, showWarnings = FALSE)
+# genes_to_plot <- c(
+#   "PNUTS",
+#   "toc",
+#   "CG2201",
+#   "Mhcl",
+#   "cnn",
+#   "numb",
+#   "hts",
+#   "RhoGEF3",
+#   "CycE",
+#   "Siz",
+#   "Adar")
 
 walk(genes_to_plot,
     ~{
-      pdf(file.path(tx_figs,
-                    str_c(.x, "_tx_ribo_coverage.pdf")),
+      pdf(file.path(pfig_dir$fig_5,
+                    str_c("5e_", .x, "_tx_ribo_coverage.pdf")),
           width = 6,
           height = 4.5)
       if (!.x %in% additional_annots$gene_name){
@@ -878,28 +861,28 @@ walk(genes_to_plot,
     })
 
 
-tx_figs <- "../figures/pdfs/tx-ribo-coverage-plots//"
-dir.create(tx_figs, showWarnings = FALSE)
-
-walk(genes_to_plot,
-    ~{
-      pdf(file.path(tx_figs,
-                    str_c(.x, "_tx_ribo_coverage.pdf")),
-          width = 6,
-          height = 4.5)
-      if (!.x %in% additional_annots$gene_name){
-        message(.x, " not switching iso")
-        return(NULL)
-      }
-      ribo_tx_summary_plots(bw_fns, 
-                       ribo_bw_fns, gene = .x, 
-                 isoform_annotation_df = additional_annots,
-                 title.width = 1.5,
-                 sizes = c(0.1, rep(0.25, length(bw_fns[[1]]) + length(ribo_bw_fns[[1]]))),
-                 fontsize = 8,
-                 cex.title = 1)
-      dev.off()
-    })
+# tx_figs <- "../figures/pdfs/tx-ribo-coverage-plots//"
+# dir.create(tx_figs, showWarnings = FALSE)
+# 
+# walk(genes_to_plot,
+#     ~{
+#       pdf(file.path(tx_figs,
+#                     str_c(.x, "_tx_ribo_coverage.pdf")),
+#           width = 6,
+#           height = 4.5)
+#       if (!.x %in% additional_annots$gene_name){
+#         message(.x, " not switching iso")
+#         return(NULL)
+#       }
+#       ribo_tx_summary_plots(bw_fns, 
+#                        ribo_bw_fns, gene = .x, 
+#                  isoform_annotation_df = additional_annots,
+#                  title.width = 1.5,
+#                  sizes = c(0.1, rep(0.25, length(bw_fns[[1]]) + length(ribo_bw_fns[[1]]))),
+#                  fontsize = 8,
+#                  cex.title = 1)
+#       dev.off()
+#     })
 ```
 
 

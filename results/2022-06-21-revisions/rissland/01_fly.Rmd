@@ -168,17 +168,17 @@ bartel_zyg <- expr_genes <- read_excel(file.path(project_dir,
   unique()
 
 public_gene_sets <- list(
-  derenzis_early_zygotic = renzis_early_genes$X2,
-  derenzis_pure_zygotic = renzis_zyg_genes$X2,
-  derenzis_mat_zygotic = renzis_mzt_genes$X2,
-  derenzis_any_zygotic = union(renzis_zyg_genes$X2,
-                                   renzis_mzt_genes$X2),
-  eisen_pure_zygotic = edata_genes$zyg$gene_id,
-  eisen_mat_zygotic = edata_genes$matzyg$gene_id,
+  # derenzis_early_zygotic = renzis_early_genes$X2,
+  # derenzis_pure_zygotic = renzis_zyg_genes$X2,
+  # derenzis_mat_zygotic = renzis_mzt_genes$X2,
+  # derenzis_any_zygotic = union(renzis_zyg_genes$X2,
+  #                                  renzis_mzt_genes$X2),
+  # eisen_pure_zygotic = edata_genes$zyg$gene_id,
+  # eisen_mat_zygotic = edata_genes$matzyg$gene_id,
   eisen_any_zygotic = union(edata_genes$zyg$gene_id, 
                                 edata_genes$matzyg$gene_id),
-  eisen_pure_mat = edata_genes$mat$gene_id,
-  bartel_zyg = bartel_zyg
+  eisen_pure_mat = edata_genes$mat$gene_id
+ # bartel_zyg = bartel_zyg
 ) %>% 
   map(na.omit)
 ```
@@ -275,7 +275,7 @@ compute_coverage <- function(bw, splice_windows_list){
 }
 
 bws <- dir(file.path(data_dir,
-                     "rissland",
+                     c("eichhorn", "rissland"),
                      "bigwigs",
                      "star"), 
            full.names = TRUE,
@@ -326,7 +326,8 @@ names(all_res) <- names(public_gene_sets)
 ```
 
 
-## Plot coverage
+## Plot coverage  
+
 ```{r plot}
 dev_stages_ordered <- c(
   "Stage 11 oocyte",
@@ -392,7 +393,12 @@ imap(all_plts,
        imap(plts, function(x, y){
        save_plot(file.path(fig_dir, "intron_metagenes", 
                                 str_c("genes_from_", study,"_", y, ".pdf")), 
-                      x, base_width = 6.5)})
+                      x, base_width = 6.5)
+         
+       save_plot(file.path(pfig_dir$sup_fig_1, 
+                                str_c("intron_metagenes_from_", study,"_", y, ".pdf")), 
+                      x, base_width = 6.5)
+         })
        })
 all_plts
 saveRDS(all_res, file.path(fig_dir, "intron_metagenes","drosophila_plotting_dat.rds"))
