@@ -1,7 +1,6 @@
 .DS_Store
 dbases/*
 data/*
-docs/*
 logs/*
 pipeline/.snakemake/*
 *.swp
@@ -19,7 +18,6 @@ pipeline/logs/*
 .Rbuildignore
 .Rhistory
 *.Rproj
-*.txt
 *.fasta
 *.ai
 *.jpg
@@ -31,8 +29,8 @@ pipeline/logs/*
 *.tsv*
 *.fa
 *.saf
-*.csv
 *.ppt
 *.tif
 *.fai
 *.bai
+*.txt

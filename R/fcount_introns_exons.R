@@ -7,7 +7,7 @@ library(Rsubread)
 
 args = commandArgs(trailingOnly=TRUE)
 
-if(length(args) < 5){
+if(length(args) < 6){
   stop("missing args: bam intron_saf exon_saf strand outfilename threads")
 }
 
@@ -46,7 +46,7 @@ exon.counts <- featureCounts(bam,
 exon_out <- file.path(outdir, paste0(sample_id, ".exon"))
 file.rename(tmp_out, exon_out)
 
-ugenes <- unique(c(unique(EX$GeneId), unique(IX$GeneID)))
+ugenes <- unique(c(unique(EX$GeneID), unique(IX$GeneID)))
 out.exon <- out.intron <- out.both <- setNames(integer(length(ugenes)), ugenes)
 
 fin <- file(intron_out, open='r')

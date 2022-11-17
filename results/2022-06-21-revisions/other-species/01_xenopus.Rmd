@@ -234,13 +234,14 @@ save_plot(file.path(fig_dir, "xenopus_t-pre-mRNA-ratios.pdf"),
 
 p
 
-save_plot(file.path(pfig_dir$fig_1, "1b_xenopus_t-pre-mRNA-ratios.pdf"),
+save_plot(file.path(pfig_dir$fig_1, "1c_xenopus_t-pre-mRNA-ratios.pdf"),
            p,
-           base_asp = 2)
+           base_asp = 3)
 
 p
 ```
 
 ```{r}
-sessioninfo::session_info()
+sessionInfo()
 ```
+

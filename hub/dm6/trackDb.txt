@@ -1,0 +1,242 @@
+
+track RisslandData
+superTrack on show
+shortLabel RisslandData
+longLabel Rissland Lab Data 
+
+    track rissland_bigwigs
+    parent RisslandData
+    compositeTrack on show
+    shortLabel RNA-seq 
+    longLabel Ribo-zero RNA-seq
+    type bigWig
+    autoScale on
+    windowingFunction mean
+    visibility full
+    maxHeightPixels 100:30:8
+    subGroup1 tpt Timepoint 3-4_hr=3-4_hr 2-3_hr=2-3_hr 4-5_hr=4-5_hr 0-1_hr=0-1_hr 1-2_hr=1-2_hr
+    subGroup2 gtype Genotype w1118=w1118 eGFP-ME31B=eGFP-ME31B
+    subGroup3 strand Strand pos=Positive neg=Negative
+    dimensions dimX=tpt dimY=gtype dimA=strand
+    sortOrder strand=- tpt=+ gtype=-
+
+
+        track SRR5469990_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 2-3_hr:w1118:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469990_fwd.bw 
+        longLabel  2-3_hr:w1118:pos
+        subGroups gtype=w1118 tpt=2-3_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5469990_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 2-3_hr:w1118:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469990_rev_neg.bw 
+        longLabel  2-3_hr:w1118:neg
+        subGroups gtype=w1118 tpt=2-3_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5469992_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 3-4_hr:w1118:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469992_fwd.bw 
+        longLabel  3-4_hr:w1118:pos
+        subGroups gtype=w1118 tpt=3-4_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5469992_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 3-4_hr:w1118:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469992_rev_neg.bw 
+        longLabel  3-4_hr:w1118:neg
+        subGroups gtype=w1118 tpt=3-4_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5469994_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 4-5_hr:w1118:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469994_fwd.bw 
+        longLabel  4-5_hr:w1118:pos
+        subGroups gtype=w1118 tpt=4-5_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5469994_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 4-5_hr:w1118:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469994_rev_neg.bw 
+        longLabel  4-5_hr:w1118:neg
+        subGroups gtype=w1118 tpt=4-5_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5469998_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 0-1_hr:eGFP-ME31B:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469998_fwd.bw 
+        longLabel  0-1_hr:eGFP-ME31B:pos
+        subGroups gtype=eGFP-ME31B tpt=0-1_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5469998_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 0-1_hr:eGFP-ME31B:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469998_rev_neg.bw 
+        longLabel  0-1_hr:eGFP-ME31B:neg
+        subGroups gtype=eGFP-ME31B tpt=0-1_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5470000_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 1-2_hr:eGFP-ME31B:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470000_fwd.bw 
+        longLabel  1-2_hr:eGFP-ME31B:pos
+        subGroups gtype=eGFP-ME31B tpt=1-2_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5470000_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 1-2_hr:eGFP-ME31B:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470000_rev_neg.bw 
+        longLabel  1-2_hr:eGFP-ME31B:neg
+        subGroups gtype=eGFP-ME31B tpt=1-2_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5470002_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 2-3_hr:eGFP-ME31B:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470002_fwd.bw 
+        longLabel  2-3_hr:eGFP-ME31B:pos
+        subGroups gtype=eGFP-ME31B tpt=2-3_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5470002_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 2-3_hr:eGFP-ME31B:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470002_rev_neg.bw 
+        longLabel  2-3_hr:eGFP-ME31B:neg
+        subGroups gtype=eGFP-ME31B tpt=2-3_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5470004_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 3-4_hr:eGFP-ME31B:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470004_fwd.bw 
+        longLabel  3-4_hr:eGFP-ME31B:pos
+        subGroups gtype=eGFP-ME31B tpt=3-4_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5470004_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 3-4_hr:eGFP-ME31B:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470004_rev_neg.bw 
+        longLabel  3-4_hr:eGFP-ME31B:neg
+        subGroups gtype=eGFP-ME31B tpt=3-4_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5470006_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 4-5_hr:eGFP-ME31B:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470006_fwd.bw 
+        longLabel  4-5_hr:eGFP-ME31B:pos
+        subGroups gtype=eGFP-ME31B tpt=4-5_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5470006_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 4-5_hr:eGFP-ME31B:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5470006_rev_neg.bw 
+        longLabel  4-5_hr:eGFP-ME31B:neg
+        subGroups gtype=eGFP-ME31B tpt=4-5_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5469986_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 0-1_hr:w1118:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469986_fwd.bw 
+        longLabel  0-1_hr:w1118:pos
+        subGroups gtype=w1118 tpt=0-1_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5469986_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 0-1_hr:w1118:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469986_rev_neg.bw 
+        longLabel  0-1_hr:w1118:neg
+        subGroups gtype=w1118 tpt=0-1_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+
+
+        track SRR5469988_fwd.bw
+        parent rissland_bigwigs on
+        shortLabel 1-2_hr:w1118:pos 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469988_fwd.bw 
+        longLabel  1-2_hr:w1118:pos
+        subGroups gtype=w1118 tpt=1-2_hr strand=pos
+        maxHeightPixels 30:30:10
+        color 50,136,189
+        type bigWig
+
+
+        track SRR5469988_rev_neg.bw
+        parent rissland_bigwigs on
+        shortLabel 1-2_hr:w1118:neg 
+        bigDataUrl http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/rissland/SRR5469988_rev_neg.bw 
+        longLabel  1-2_hr:w1118:neg
+        subGroups gtype=w1118 tpt=1-2_hr strand=neg
+        maxHeightPixels 30:30:10
+        color 213,62,79
+        type bigWig
+

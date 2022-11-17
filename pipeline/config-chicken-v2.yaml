@@ -78,8 +78,8 @@ SINGULARITY:
 
 #memory allocation (MB) for default rules, or higher memory processes
 MALLOC:
-    DEFAULT: "4096"
-    SALMON: "16000"
+    DEFAULT: "16000"
+    SALMON: "32000"
     STAR: "36864"
 
 CLUSTER: 

@@ -1,0 +1,6 @@
+hub mzt
+shortLabel mztTracks 
+longLabel Gene expression dynamics across the MZT 
+genomesFile genomes.txt
+email kent.riemondy@cuanschutz.edu
+

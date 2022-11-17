@@ -63,8 +63,23 @@ our_annot <- read_excel("processed_files/mzt_class_summary.xlsx", sheet = 2)
 derenzis_kwas_genes
 
 our_zyg <- unique(our_annot$gene_name[our_annot$mzt_class %in% c("Zygotic", "Maternal + Zygotic")])
-length(unique(intersect(our_zyg, derenzis_kwas_genes)))
+found_early_genes <- unique(intersect(our_zyg, derenzis_kwas_genes))
+length(found_early_genes)
+
+gtf <- import(annots$drosophila$gtf)
+gtf[gtf$gene_name %in% found_early_genes] %>% 
+  as.data.frame() %>% 
+  filter(type == "exon") %>% 
+  group_by(transcript_id, gene_name) %>% 
+  summarize(n_exons = n(),
+            n_introns = n_exons - 1) %>% 
+  group_by(gene_name) %>% 
+  summarize(max_n_introns = max(n_introns)) %>% 
+  group_by(max_n_introns) %>% 
+  summarize(n())
 ```
+
+We identify 28 of the 50 early zygotic genes identified in both the De Renzis and Kwasnieski papers. 
 
 ## Examine splicing rates
 
@@ -1081,12 +1096,13 @@ save_plot(file.path(pfig_dir$sup_fig_4, "s4e_fcount_v_icount_nintrons.pdf"),
           p,
           base_asp = 1.5)
 p
+
 ```
 
 
 ```{r}
 
-stat.test <- fcount_intron_gl_2class %>%
+stat.test <- fcount_intron_gl %>%
   wilcox_test(primary_tx_length ~ gene_class) %>%
   add_significance() %>% 
   add_xy_position(x = "gene_class", y.trans = log10)
@@ -1097,7 +1113,7 @@ p <- fcount_intron_gl %>%
   geom_jitter(size = 0.5) +
     geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
     scale_fill_manual(values = study_cols) + 
-   stat_pvalue_manual(stat.test, label = "p = {p}", size = 2) +
+  # stat_pvalue_manual(stat.test, label = "p = {p}", size = 2) +
   labs(x = "",
        y = "Primary transcript\nlength") +
     theme(legend.position = "none",
@@ -1107,10 +1123,12 @@ save_plot(file.path(pfig_dir$sup_fig_4, "s4f_fcount_v_icount_primary_tx_length_c
           p,
           base_asp = 0.66)
 p
+
+stat.test
 ```
 
 ```{r}
-stat.test <- fcount_intron_gl_2class %>%
+stat.test <- fcount_intron_gl %>%
   wilcox_test(prop_masked ~ gene_class) %>%
   add_significance() %>% 
   add_xy_position(x = "gene_class")
@@ -1121,7 +1139,7 @@ p <- fcount_intron_gl %>%
      geom_jitter(size = 0.5) +
     geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
     scale_fill_manual(values = study_cols) + 
-     stat_pvalue_manual(stat.test, label = "p = {p}", size = 2 ) +
+    # stat_pvalue_manual(stat.test, label = "p = {p}", size = 2 ) +
   labs(x = "",
        y = "Proportion of\nintron masked") +
     theme(legend.position = "none",
@@ -1131,11 +1149,13 @@ save_plot(file.path(pfig_dir$sup_fig_4, "s4j_fcount_v_icount_proportion_of_maski
           p,
           base_asp = 0.66)
 p
+
+stat.test
 ```
 
 
 ```{r}
-stat.test <- fcount_intron_gl_2class %>%
+stat.test <- fcount_intron_gl %>%
   wilcox_test(median_intron_len ~ gene_class) %>%
   add_significance() %>% 
   add_xy_position(x = "gene_class", y.trans = log10)
@@ -1146,7 +1166,7 @@ p <- fcount_intron_gl %>%
        geom_jitter(size = 0.5) +
     geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
     scale_fill_manual(values = study_cols) + 
-  stat_pvalue_manual(stat.test, label = "p = {p}", size = 2) +
+#  stat_pvalue_manual(stat.test, label = "p = {p}", size = 2) +
   labs(x = "",
        y = "Median intron\nlength") +
     theme(legend.position = "none",
@@ -1156,11 +1176,13 @@ save_plot(file.path(pfig_dir$sup_fig_4, "s4g_fcount_v_icount_median_intron_lengt
           p,
           base_asp = 0.66)
 p
+
+stat.test
 ```
 
 
 ```{r}
-stat.test <- fcount_intron_gl_2class %>%
+stat.test <- fcount_intron_gl %>%
   wilcox_test(intron_baseMean ~ gene_class) %>%
   add_significance() %>% 
   add_xy_position(x = "gene_class", y.trans = log10)
@@ -1171,7 +1193,7 @@ p <- fcount_intron_gl %>%
     geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
     scale_y_log10(labels = scales::comma) + 
     scale_fill_manual(values = study_cols) + 
-    stat_pvalue_manual(stat.test, label = "p = {p}", size = 2) +
+ #   stat_pvalue_manual(stat.test, label = "p = {p}", size = 2) +
   labs(x = "",
        y = "Normalized Intron\nexpression") +
     theme(legend.position = "none",
@@ -1182,11 +1204,13 @@ save_plot(file.path(pfig_dir$sup_fig_4, "s4i_fcount_v_icount_intron_normalized_e
           base_asp = 0.66)
 
 p
+
+stat.test
 ```
 
 
 ```{r}
-stat.test <- fcount_intron_gl_2class %>%
+stat.test <- fcount_intron_gl %>%
   wilcox_test(exon_baseMean ~ gene_class) %>%
   add_significance() %>% 
   add_xy_position(x = "gene_class", y.trans = log10)
@@ -1197,7 +1221,7 @@ p <- fcount_intron_gl %>%
     geom_boxplot(aes(fill = gene_class), outlier.shape = NA, alpha = 0.8) +
     scale_y_log10(labels = scales::comma) + 
     scale_fill_manual(values = study_cols) + 
-      stat_pvalue_manual(stat.test, label = "p = {p}", size = 2 ) +
+   #   stat_pvalue_manual(stat.test, label = "{p.adj.signif}", size = 2, step.increase = 0.01) +
   labs(x = "",
        y = "Normalized exon\nexpression") +
     theme(legend.position = "none",
@@ -1207,6 +1231,125 @@ save_plot(file.path(pfig_dir$sup_fig_4, "s4h_fcount_v_icount_exon_normalized_exp
           p, base_asp = 0.66)
 
 p
+
+stat.test
+```
+
+Examine go-terms for gene sets
+
+```{r, eval = FALSE}
+library(gprofiler2)
+
+gl <- list("This Paper" = setdiff(zyg_gene_lists$`Intron method`, 
+                                      zyg_gene_lists$`Fcount Intron method`),
+          "Traditional\nmapping" = setdiff(zyg_gene_lists$`Fcount Intron method`,
+                                      zyg_gene_lists$`Intron method`),
+          "Shared genes" = intersect(zyg_gene_lists$`Intron method`,
+                                   zyg_gene_lists$`Fcount Intron method`)
+)
+get_go_terms <- function(genes){
+  go_res <- gost(unique(genes),
+               organism = "dmelanogaster",
+               ordered_query = FALSE,
+               significant = FALSE,
+               # sources = c("GO", 
+               #            "KEGG", 
+               #            "REAC", 
+               #            "TF"),
+               evcodes = TRUE,
+               correction_method = "fdr")
+
+res_out <- go_res[["result"]] %>% 
+  select(-parents) %>% 
+  mutate(gene_id = str_split(intersection, ",")) %>% 
+  unnest() %>% 
+  left_join(gene2symbol) %>% 
+  select(-gene_id) %>% 
+  nest(data = gene_name) %>% 
+  mutate(gene_name = map_chr(data, ~str_c(.x$gene_name, collapse = ","))) %>% 
+  dplyr::select(-data, -intersection) %>% 
+  mutate(negative_log10_of_adjusted_p_value = -log10(p_value))
+
+
+plt_dat <- group_by(res_out, source) %>% 
+  arrange(p_value, .by_group = T) %>% 
+  dplyr::slice(1:15) %>% 
+  ungroup()
+
+rename_go <- c(
+  "GO:MF"= "Molecular Function",
+  "GO:CC"= "Cellular Component",
+  "GO:BP" = "Biological Process"
+ # "TF" = "TF binding"
+)
+
+plt_dat <- filter(plt_dat,
+                  source %in% names(rename_go)) %>% 
+                  mutate(
+                  term_name_short = ifelse(str_count(term_name, " ") >= 4,
+                                           word(term_name, 1, 4),
+                                           term_name),
+                  term_name_short = str_remove(term_name_short, "^Factor: "),
+                  source = rename_go[source])
+
+plt_dat$term_name_short <- factor(plt_dat$term_name_short, 
+                                  levels = rev(plt_dat$term_name_short))
+
+p <- ggplot(plt_dat, aes(term_name_short, negative_log10_of_adjusted_p_value)) +
+  geom_col(aes(fill = source), color = "black") +
+  coord_flip() +
+  facet_wrap(~source, drop = T, scales = "free_y", ncol = 1) +
+  scale_fill_brewer(palette = "Greys", direction = -1) + 
+  labs(x = "",
+       y = "-log10(adjusted pvalue)") + 
+  theme_cowplot() +
+  theme(legend.pos = "none")
+ list(p,
+      res_out,
+      go_res[["result"]])
+}
+
+gos <- lapply(gl, get_go_terms)
+sig_terms <- lapply(gos, function(x) x[[2]] %>% filter(source == "GO:BP", p_value < 0.05) %>% slice(1:200) %>%  pull(term_name)) %>% unlist() %>% unique()
+
+go_df <- lapply(gos, function(x) {
+  gt <- x[[2]]
+  gt <- filter(gt, source == "GO:BP", term_name %in% sig_terms) 
+  gt <- data.frame(neg_log10_P = gt$negative_log10_of_adjusted_p_value, row.names = gt$term_name)
+  gt[sig_terms, , drop = FALSE]
+}) %>% 
+  do.call(cbind, .)
+
+# save_plot(file.path(fig_dir, "Go_term_enrichment_isoform_genes.pdf"),
+#           p, base_asp = 1.2, base_height = 6.5)
+#         
+# write_tsv(res_out, file.path(tbl_dir, "go_terms_isoforms.tsv")) 
+# 
+# to_keep <- c("GO:BP",
+#              "GO:CC",
+#              "GO:MF",
+#              "KEGG")
+
+# res_out %>% 
+#   filter(source %in% to_keep) %>% 
+#   dplyr::select(source,
+#                   term_name, term_id, 
+#                   p_value, 
+#                   gene_name) %>% 
+#   mutate(source = str_replace_all(source, '[[:punct:]]+', " ")) %>% 
+#   split(., .$source) %>% 
+#   openxlsx::write.xlsx(., file.path(tbl_dir,
+#                      "go_terms_isoforms.xlsx"), overwrite = TRUE)
+# 
+# res_out %>% 
+#   filter(source %in% to_keep) %>% 
+#   dplyr::select(source,
+#                   term_name, term_id, 
+#                   p_value, 
+#                   gene_name) %>% 
+#   mutate(source = str_replace_all(source, '[[:punct:]]+', " ")) %>% 
+#   split(., .$source) %>% 
+# openxlsx::write.xlsx(., file.path(ptable_dir, "table_s4.xlsx"), overwrite = TRUE)
 ```
 
 ## R session info  

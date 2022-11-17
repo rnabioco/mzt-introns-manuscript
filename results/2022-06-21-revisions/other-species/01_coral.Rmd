@@ -132,23 +132,23 @@ tpm_means <- tpm_summary %>%
                                 na.rm = T)) 
 
 dev_stages_ordered <- c(
-  "egg",
-  "fert_embryo",
-  "cleavage",
-  "prawn_chip",
-  "morulae",
-  "blastula",
-  "gastrula",
-  "planulae"
+  "egg" = "Egg",
+  "fert_embryo" = "Fertilized\nembryo",
+  "cleavage" = "Cleavage",
+  "prawn_chip" = "Prawn chip",
+  "morulae" = "Morulae",
+  "blastula" = "Blastula",
+  "gastrula" = "Gastrula",
+  "planulae" = "Planulae"
 )
 
 tpm_means <- mutate(tpm_means, 
-                       stage = factor(stage, 
+                       stage = factor(dev_stages_ordered[stage], 
                                       levels = dev_stages_ordered)
                        )
 
 stage_col_palette <- c("#00A875", "#0072BC")
-stage_cols <- stage_col_palette[1 + !levels(tpm_means$stage) %in% c("egg", "fert_embryo")]
+stage_cols <- stage_col_palette[1 + !levels(tpm_means$stage) %in% c("Egg", "Fertilized\nembryo")]
 names(stage_cols) <- levels(tpm_means$stage)
 
 p <- ggplot(tpm_means, 
@@ -178,12 +178,12 @@ p
 save_plot(file.path(pfig_dir$fig_1, "1b_coral-pre-mRNA-ratios.pdf"),
             p, 
           base_width = 6.5,
-          base_height = 6.5)
+          base_height = 4.5)
 
 
 p
 ```
 
 ```{r}
-sessioninfo::session_info()
+sessionInfo()
 ```

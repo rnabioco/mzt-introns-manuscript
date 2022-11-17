@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Session genome="/Users/kriemo/Projects/shared_dbases/genomes/drosophila/Drosophila_melanogaster.BDGP6.dna.toplevel.fa" hasGeneTrack="false" hasSequenceTrack="true" locus="2R:21685682-21714626" nextAutoscaleGroup="11" path="/Users/kriemo/Projects/mzt-introns/docs/Dmel_rissland.xml" version="8">
+    <Resources>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470004_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710285_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469986_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469990_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469992_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470002_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470004_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710294_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710293_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710294_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710286_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710279_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710293_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469988_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710280_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469986_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469998_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470000_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710299_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/Drosophila_melanogaster.BDGP6.84.sorted.gtf"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710299_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469994_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710279_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470000_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470002_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469992_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710285_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469990_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710286_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469988_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469998_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470006_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710291_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710292_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710280_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470006_rev_neg.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710291_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710292_fwd.bw"/>
+        <Resource path="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469994_fwd.bw"/>
+    </Resources>
+    <Panel height="1520" name="DataPanel" width="1823">
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469986_fwd.bw" name="0-1hr embryo Rissland (+) SRR5469986_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469986_rev_neg.bw" name="0-1hr embryo Rissland (-) SRR5469986_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469988_fwd.bw" name="1-2 hr embryo (+) SRR5469988_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469988_rev_neg.bw" name="1-2 hr embryo (-) SRR5469988_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469990_fwd.bw" name="2-3 hr embryo (+) SRR5469990_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469990_rev_neg.bw" name="2-3 hr embryo (-) SRR5469990_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469992_fwd.bw" name="3-4 hr embryo (+) SRR5469992_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469992_rev_neg.bw" name="3-4 hr embryo (-) SRR5469992_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469994_fwd.bw" name="5-6 hr embryo (+) SRR5469994_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="8" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469994_rev_neg.bw" name="5-6 hr embryo (-) SRR5469994_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="762.0" minimum="-410.6875" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469998_fwd.bw" name="0-1 hr embryo me31bgfp (+) SRR5469998_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5469998_rev_neg.bw" name="0-1 hr embryo me31bgfp (-) SRR5469998_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470000_fwd.bw" name="1-2 hr embryo me31bgfp (+) SRR5470000_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470000_rev_neg.bw" name="1-2 hr embryo me31bgfp (-) SRR5470000_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470002_fwd.bw" name="2-3 hr embryo me31bgfp (+) SRR5470002_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470002_rev_neg.bw" name="2-3 hr embryo me31bgfp (-) SRR5470002_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470004_fwd.bw" name="3-4 hr embryo me31bgfp (+) SRR5470004_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470004_rev_neg.bw" name="3-4 hr embryo me31bgfp (-) SRR5470004_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470006_fwd.bw" name="5-6 hr embryo med31bgfp (+) SRR5470006_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR5470006_rev_neg.bw" name="5-6 hr embryo me31bgfp (-) SRR5470006_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710291_fwd.bw" name="0-1 hr embryo (+) SRR3710291_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710291_rev_neg.bw" name="0-1 hr embryo (-) SRR3710291_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710292_fwd.bw" name="2-3 hr embryo (+) SRR3710292_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710292_rev_neg.bw" name="2-3 hr embryo (-) SRR3710292_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710293_fwd.bw" name="3-4 hr embryo (+) SRR3710293_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710293_rev_neg.bw" name="3-4 hr embryo (-) SRR3710293_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710294_fwd.bw" name="5-6 hr embryo (+) SRR3710294_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="9" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710294_rev_neg.bw" name="5-6 hr embryo (-) SRR3710294_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="978.333" minimum="-691.125" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710299_fwd.bw" name="Stage 11 oocyte (+) SRR3710299_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710299_rev_neg.bw" name="Stage 11 oocyte (-) SRR3710299_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710285_fwd.bw" name="Stage 12 oocyte (+) SRR3710285_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710285_rev_neg.bw" name="Stage 12 oocyte (-) SRR3710285_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710286_fwd.bw" name="Stage 13 oocyte (+) SRR3710286_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710286_rev_neg.bw" name="Stage 13 oocyte (-) SRR3710286_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710279_fwd.bw" name="Stage 14 oocyte (+) SRR3710279_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710279_rev_neg.bw" name="Stage 14 oocyte (-) SRR3710279_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="0,0,178" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710280_fwd.bw" name="Activated Egg (+) SRR3710280_fwd.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+        <Track altColor="255,0,0" autoScale="false" autoscaleGroup="10" clazz="org.broad.igv.track.DataSourceTrack" color="0,0,178" fontSize="12" id="http://amc-sandbox.ucdenver.edu/User33/rissland/SRR3710280_rev_neg.bw" name="Activated Egg (-) SRR3710280_rev_neg.bw" renderer="BAR_CHART" visible="true" windowFunction="mean">
+            <DataRange baseline="0.0" drawBaseline="true" flipAxis="false" maximum="290.78793" minimum="-156.0" type="LINEAR"/>
+        </Track>
+    </Panel>
+    <Panel height="441" name="FeaturePanel" width="1823">
+        <Track altColor="0,0,178" clazz="org.broad.igv.track.SequenceTrack" color="0,0,178" fontSize="10" id="Reference sequence" name="Reference sequence" visible="true"/>
+        <Track clazz="org.broad.igv.track.FeatureTrack" color="0,0,178" displayMode="SQUISHED" featureVisibilityWindow="1000000" fontSize="10" id="http://amc-sandbox.ucdenver.edu/User33/rissland/Drosophila_melanogaster.BDGP6.84.sorted.gtf" name="Drosophila_melanogaster.BDGP6.84.sorted.gtf" visible="true"/>
+        <Track altColor="0,0,178" clazz="org.broad.igv.track.FeatureTrack" color="0,0,178" displayMode="SQUISHED" featureVisibilityWindow="10000000" fontSize="10" id="CAGGTAG" name="CAGGTAG" visible="true">
+            <SequenceMatchSource pattern="CAGGTAG" strand="POSITIVE"/>
+        </Track>
+        <Track altColor="0,0,178" clazz="org.broad.igv.track.FeatureTrack" color="255,0,0" displayMode="SQUISHED" featureVisibilityWindow="10000000" fontSize="10" id="CAGGTAG Negative" name="CAGGTAG Negative" visible="true">
+            <SequenceMatchSource pattern="CAGGTAG" strand="NEGATIVE"/>
+        </Track>
+    </Panel>
+    <PanelLayout dividerFractions="0.6261525565800503"/>
+    <HiddenAttributes>
+        <Attribute name="DATA FILE"/>
+        <Attribute name="DATA TYPE"/>
+        <Attribute name="NAME"/>
+    </HiddenAttributes>
+</Session>

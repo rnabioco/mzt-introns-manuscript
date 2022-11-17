@@ -40,6 +40,7 @@ with open(config["LIB_PARAMS"], 'r') as f:
     for line in f:
         if line.startswith("#"): continue
         fields = line.split()
+        if not fields: continue
         SAMPLES.append(fields[0])
 
 if len(SAMPLES) == 0:

@@ -7,12 +7,13 @@ to_run <- c("01_coral.Rmd",
             "01_zebrafish.Rmd",
             "01_xenopus.Rmd")
 
-walk(to_run, render, output_dir = "html")
+lapply(to_run, render, output_dir = "html")
 
 setwd(file.path(base_dir, "rissland"))
 to_run <- c("01_fly.Rmd",
             "02.Rmd",
             "03.Rmd",
+            "04.Rmd",
             "nanopore.Rmd",
             "gene-plots.Rmd")
-walk(to_run, render)
+lapply(to_run, render, output_dir = "html")

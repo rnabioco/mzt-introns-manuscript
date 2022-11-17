@@ -1292,7 +1292,7 @@ save_plot(file.path(fig_dir, "mass_spec_overlap.pdf"),
 
 save_plot(file.path(pfig_dir$fig_5, "5c_mass_spec_overlap.pdf"),
           p,
-          base_asp = 1.2)
+          base_asp = 0.9)
 ```
 
 
@@ -1489,7 +1489,7 @@ save_plot(file.path(fig_dir, "cds_domain_change_summary.pdf"), p,
           base_asp = 1.2)
 
 save_plot(file.path(pfig_dir$fig_5, "5b_cds_domain_change_summary.pdf"), p,
-          base_asp = 1.2)
+          base_asp = 0.8)
 ```
 
 
@@ -1734,7 +1734,7 @@ p
 
 save_plot(file.path(pfig_dir$fig_5, "5d_riboprofiling_coverage.pdf"),
           p,
-          base_asp = 1.2)
+          base_asp = 1.0)
 ```
 
 ```{r}

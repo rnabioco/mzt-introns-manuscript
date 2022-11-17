@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here)
 source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
 fig_dir <- "figs"
-dir.create(fig_dir, recursive = TRUE)
+dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 
@@ -251,8 +251,7 @@ p
 
 save_plot(file.path(pfig_dir$fig_1, "1d_fly-pre-mRNA-ratios.pdf"),
                     p, 
-          base_width = 6.5,
-          base_height = 6.5)
+          base_asp = 1, base_height = 4.5, ncol = 2, nrow = 1)
 
 p
 ```
@@ -700,6 +699,10 @@ save_plot(file.path(fig_dir, "classification_type_all_zygotic_genes.pdf"),
 p
 
 ```
+```{r}
+table(detection_method$method)
+
+```
 
 ## Plot out expression
 
@@ -737,7 +740,7 @@ rs_exon_intron_comps$intron  <- rs_exon_intron_comp %>%
   as.matrix()
 
 rs_exon_intron_comps_log <- map(rs_exon_intron_comps, 
-                            ~log1p(.x))
+                            ~log2(.x + 1))
 
 rissland_mat_annot <- rs_exon_intron_comp %>% 
   left_join(gene_class_selected, by = "gene_id") %>% 
@@ -772,11 +775,10 @@ rs_exon_intron_comps_log <- map(rs_exon_intron_comps_log,
                                   .x
                                 })
  
-
 ## All classes
 h1 <- Heatmap(rs_exon_intron_comps_log$exon, 
                             na_col = "black",
-              name = "Exon log TPM",
+              name = "Exon log2(TPM + 1)",
         show_row_dend = F, 
         show_column_dend = F,
         cluster_columns = FALSE,
@@ -784,7 +786,7 @@ h1 <- Heatmap(rs_exon_intron_comps_log$exon,
         column_title = "Exon TPM",
         split = rissland_mat_annot$mzt_class)
 
-h2 <- Heatmap(rs_exon_intron_comps_log$intron, name = "Intron log TPM",
+h2 <- Heatmap(rs_exon_intron_comps_log$intron, name = "Intron log2(TPM + 1)",
               na_col = "black",
         show_row_dend = F, 
         show_column_dend = F,
@@ -816,7 +818,7 @@ mean_tpms_annot <- bind_rows(mean_exonic_tpms,
     pivot_longer(cols = -c(gene_id, count_type), 
                  names_to = "stage", 
                  values_to = "TPM") %>% 
-    mutate(TPM = log2(TPM + 0.0001)) %>% 
+    mutate(log2TPM = log2(TPM)) %>% 
     inner_join(gene_class_df, by = "gene_id")
 
 mean_tpms_annot <- filter(mean_tpms_annot, 
@@ -831,14 +833,14 @@ mean_tpms_annot <- mean_tpms_annot %>%
                            scales::comma(length(unique(gene_id))),
                            ")"),
          stage_ael = str_remove(stage, " hr embryo"))
-p <- ggplot(mean_tpms_annot, aes(stage_ael, TPM)) +
+p <- ggplot(mean_tpms_annot, aes(stage_ael, log2TPM)) +
     geom_boxplot(aes(fill = count_type),
                  notch = T, coef = NULL) +
     scale_fill_brewer(palette = "Set1") + 
     scale_fill_manual(values = grey_red) + 
     facet_grid(~mzt_class) +
     labs(x = "Hours after egg laying",
-         y = "TPM (Log2)",
+         y = "log2(TPM)",
          fill = "") +
     theme(strip.background = element_blank())
 p
@@ -850,9 +852,16 @@ p
 
 save_plot(file.path(pfig_dir$fig_2, "2b_tpm_distribution_mztclasses.pdf"),
           p,
-          base_asp = 2,
+          base_asp = 2.3,
           limitsize = FALSE)
 
+```
+
+
+```{r}
+mean_tpms_annot %>%
+  group_by(stage_ael, count_type, mzt_class) %>% 
+  summarize(mean_tpm = signif(mean(TPM), 5))
 ```
 
 
@@ -1600,7 +1609,7 @@ pdf(file.path(fig_dir, "fcount_method_classification_overlap_upset.pdf"),
 p
 dev.off()
 
-pdf(file.path(pfig_dir$fig_3, "3b_fcount_method_classification_overlap_upset.pdf"),
+pdf(file.path(pfig_dir$sup_fig_5, "fcount_method_classification_overlap_upset.pdf"),
     width = 4.5, 
     height = 3)
 p
@@ -1632,7 +1641,7 @@ pdf(file.path(fig_dir, "intron_method_classification_overlap_upset.pdf"),
 p
 dev.off()
 
-pdf(file.path(pfig_dir$sup_fig_5, "intron_method_classification_overlap_upset.pdf"),
+pdf(file.path(pfig_dir$fig_3, "3b_intron_method_classification_overlap_upset.pdf"),
     width = 4.5, 
     height = 3)
 p
@@ -2658,6 +2667,7 @@ dplyr::select(stat.test,
               type:group2, p:p.adj.signif, 
               n1,n2) %>% 
   write_csv(file.path(pfig_dir$fig_2, "zelda-binding-stats.csv"))
+plt_txt
 ```
 Note that the #s of genes shown here are fewer than the # of genes that we can classify. For the `classification` panel, the # is less because there are genes that do not have zelda binding information in the Eisen data, due to gene name differences or other reasons. The `Zygotic genes` panel has fewer genes because we classify time to expression first solely on intronic read counts, which are not present for every zygotic gene (due to monoexonic genes or no intronic signal for other reasons). If a gene is not classified but is a purly zygotic gene then it will be classified by it's exonic signal. For these reasons the #s don't match, which we should explaoin in the figure legend/methods 
 

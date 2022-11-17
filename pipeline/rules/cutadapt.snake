@@ -29,7 +29,7 @@ rule cutadapt_single:
   input:
     _raw_fqs, 
   output:
-    path.join("{data}", "fastq", "trimmed",  "{sample}_trimmed.fastq.gz")
+    temp(path.join("{data}", "fastq", "trimmed", "{sample}_trimmed.fastq.gz"))
   params:
     settings = _trim_settings,
   log:

@@ -27,6 +27,11 @@ INTRONS:
 EXONS:
     "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/saf/fly_exons.saf"
 
+#INTRONS:
+#    ""
+#
+#EXONS:
+#    ""
 # fasta index file
 CHROM_SIZES:
     "/beevol/home/riemondy/Projects/rissland-mzt-introns/mzt-introns-manuscript/dbases/drosophila/ext/Drosophila_melanogaster.BDGP6.dna.toplevel.fa.fai"

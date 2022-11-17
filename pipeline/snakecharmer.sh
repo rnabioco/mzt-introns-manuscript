@@ -28,19 +28,19 @@ run_snakemake () {
   snakemake \
       --drmaa "$args" \
       --snakefile Snakefile \
-      --jobs 150 \
-      --resources all_threads=150 \
+      --jobs 200 \
+      --resources all_threads=200 \
       --latency-wait 50 \
       --printshellcmds \
       --rerun-incomplete  \
       --configfile $1 \
       --singularity-args '--bind /beevol/home/riemondy' \
-      --use-singularity
-
+      --use-singularity 
 }
 
 run_snakemake config-drosophila-rissland-v2.yaml 
+run_snakemake config-drosophila-eichhorn-v2.yaml
 run_snakemake config-xenopus-polya-v2.yaml
 run_snakemake config-xenopus-ribozero-v2.yaml
 run_snakemake config-zebrafish-v2.yaml 
-run_snakemake config-chicken-v2.yaml
+run_snakemake config-coral.yaml

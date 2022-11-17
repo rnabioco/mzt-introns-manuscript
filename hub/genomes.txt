@@ -1,0 +1,3 @@
+genome dm6
+defaultPos chrX:19,774,097-19,785,439
+trackDb http://amc-sandbox.ucdenver.edu/User33/rissland/hub/dm6/trackDb.txt

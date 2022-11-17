@@ -3,26 +3,23 @@
 
 args = commandArgs(trailingOnly=TRUE)
 
-if(length(args) < 4){
-  stop("missing args: gtf fasta species outpath")
+if(length(args) < 3){
+  stop("missing args: gtf fasta outpath")
 }
 
 gtf <- args[1]
 fa <- args[2]
-species <- args[3]
-outpath <- args[4]
+outpath <- args[3]
 
 library(eisaR)
-library(readr)
-library(dplyr)
-library(purrr)
-library(stringr)
 library(Biostrings)
 library(GenomicRanges)
 library(Rsamtools)
+library(GenomicFeatures)
+library(stringr)
 
 outdir <- file.path(outpath, "eisa")
-dir.create(outdir, recursive = TRUE, showWarnings = TRUE)
+dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 grl <- getFeatureRanges(
   gtf = gtf,
@@ -34,12 +31,13 @@ grl <- getFeatureRanges(
 )
 
 # grl may contain out of bounds regions (off chromosome entries)
-chrom_sizes <- read_tsv(str_c(fa, ".fai"),
-         col_types = 'ci---', 
-         col_names = c("chrom", "size"))
-
-chrom_sizes <- left_join(data.frame(chrom = seqlevels(grl)), chrom_sizes)
-seqinfo(grl) <- Seqinfo(seqnames = chrom_sizes$chrom, seqlengths = chrom_sizes$size)
+chrom_sizes <- read.table(paste0(fa, ".fai"),
+                          header = FALSE,
+                          sep = "\t")
+chrom_sizes <- chrom_sizes[, 1:2]
+colnames(chrom_sizes) <- c("seqname", "size")
+slens <- chrom_sizes$size[match(seqlevels(grl), chrom_sizes$seqname)]
+seqinfo(grl) <- Seqinfo(seqnames = seqlevels(grl), seqlengths = slens)
 
 grl <- trim(grl)
 
@@ -47,35 +45,33 @@ seqs <- GenomicFeatures::extractTranscriptSeqs(
   x = Rsamtools::FaFile(fa), 
   transcripts = grl
 )
+
 # trim polyAs 
-seqs_no_tails <- map(as.character(seqs), ~str_remove(.x, "A+$")) %>% unlist()
+seq_names <- names(seqs)
+seqs <- str_remove(as.character(seqs), "A+$")
+seqs <- as(seqs, "DNAStringSet")
+names(seqs) <- seq_names
 
-seqs_no_tails <- tibble(
-  id = names(seqs_no_tails),
-  seq = seqs_no_tails
-)
+mcols(seqs)$is_duplicate <- duplicated(seqs)
+mcols(seqs)$seq_len <- width(seqs)
+mcols(seqs)$seq_id <- match(seqs, unique(seqs))
+mcols(seqs)$representative <- unlist(lapply(split(names(seqs),
+                                                  mcols(seqs)$seq_id),
+                                            function(x) rep(x[1], length(x))),
+                                     use.names = FALSE)
 
-seqs_no_tails <- seqs_no_tails %>%
-  group_by(seq) %>%
-  mutate(representative = dplyr::first(id), 
-         is_duplicate = representative != id) %>% 
-  ungroup() %>% 
-  mutate(seq_len = nchar(seq))
+seqs_no_tails_long <- seqs[width(seqs) > 25]
 
-too_short <- filter(seqs_no_tails, seq_len < 25)
-seqs_no_tails_long <- filter(seqs_no_tails, seq_len > 25)
+duplicate_seqs <- seqs_no_tails_long[mcols(seqs_no_tails_long)$is_duplicate]
+duplicate_seqs <- as.data.frame(mcols(duplicate_seqs))
+duplicate_seqs$DuplicateRef <- rownames(duplicate_seqs)
+duplicate_seqs$RetainedRef <-  duplicate_seqs$representative
+duplicate_seqs <- duplicate_seqs[, c("DuplicateRef", 
+                                                "RetainedRef",
+                                                "seq_len")]
+rownames(duplicate_seqs) <- NULL
 
-duplicate_seqs <- filter(seqs_no_tails_long, is_duplicate) %>% 
-  dplyr::select(RetainedRef = representative,
-                DuplicateRef = id,
-                everything())
-
-polished_seqs <- filter(seqs_no_tails_long, !is_duplicate) 
-
-seq_strings <- polished_seqs$seq
-names(seq_strings) <- polished_seqs$id
-
-seq_strings <- DNAStringSet(seq_strings)
+polished_seqs <- seqs_no_tails_long[!mcols(seqs_no_tails_long)$is_duplicate]
 
 exportToGtf(
   grl, 
@@ -83,13 +79,15 @@ exportToGtf(
 
 df <- getTx2Gene(grl)
 
-write_tsv(df, file.path(outdir,"tx2gene.tsv"))
+write.table(df, file.path(outdir,"tx2gene.tsv"), sep = "\t", 
+            quote = FALSE, row.names = FALSE)
 
-# write to top-level directory and eisa directory
-writeXStringSet(seq_strings, file.path(outpath,'eisa.fa'))
+# write to top-level directory, also
+writeXStringSet(polished_seqs, file.path(outpath,'eisa.fa'))
 indexFa(file.path(outpath,'eisa.fa'))
 
-writeXStringSet(seq_strings, file.path(outdir,'eisa.fa'))
+writeXStringSet(polished_seqs, file.path(outdir,'eisa.fa'))
 indexFa(file.path(outdir,'eisa.fa'))
 
-write_tsv(duplicate_seqs, file.path(outdir,"duplicated_seqs.tsv"))
+write.table(duplicate_seqs, file.path(outdir,"duplicated_seqs.tsv"), sep = "\t", 
+          quote = FALSE, row.names = FALSE)

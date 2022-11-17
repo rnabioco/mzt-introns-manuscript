@@ -22,7 +22,7 @@ library(here)
 source(here('results', '2022-06-21-revisions', 'src',  'globals.r'))
 
 fig_dir <- "figs"
-dir.create(fig_dir, recursive = TRUE)
+dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 ```
 
 
