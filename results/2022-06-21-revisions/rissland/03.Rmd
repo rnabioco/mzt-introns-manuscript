@@ -747,6 +747,10 @@ peps$max_timepoint <- apply(as.matrix(peps[, 4:10]),
                             MARGIN = 1, 
                             function(x) a[which(x == max(x))])
 
+# table also has yeast proteins, only keep fly matched peptides 
+# note that this didn't change the # of matching peptides
+peps <- peps[startsWith(peps$Leading.razor.protein, "FBtr"), ]
+
 matched_peps <- map(split(seq_diffs_zygotic, 1:nrow(seq_diffs_zygotic)), 
     ~{
       if(.x$new_aa == ""){
